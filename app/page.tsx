@@ -16,6 +16,12 @@ export default function LandingPage() {
 							FAQ
 						</Link>
 						<Link
+							href="/support"
+							className="no-underline text-muted px-2.5 py-2 rounded-full border border-line bg-[rgba(17,22,28,0.35)]"
+						>
+							Support
+						</Link>
+						<Link
 							href="/api/auth/strava"
 							className="no-underline text-muted px-2.5 py-2 rounded-full border border-line bg-[rgba(17,22,28,0.35)]"
 						>
