@@ -14,12 +14,12 @@
 
 - Vercel / Supabase limiting - could pass by the free tier. Would have to look at using a VPS instead, and could always forgo supabase with an actual postgres server.
 
-- Strava API usage - 200 requests every 15 minutes, with up to 2,000 requests per day
+- ~~Strava API usage - 200 requests every 15 minutes, with up to 2,000 requests per day~~ Approved for 999 users!
 
 ## Roadmap
 
 ### Priority 1
-- **Photo support** — Allow users to attach photos to updates 
+- **Photo support** — Allow users to attach photos to updates
 - **Email notifications** — Let followers subscribe to a hiker's tracker and receive email updates when new trail updates are posted
 - **GPX file upload** — Allow users to upload their own GPX files instead of having to use strava.
 - **Elevation profile chart** — Display an elevation chart of the PCT showing the hiker's current position
