@@ -19,14 +19,11 @@
 ## Roadmap
 
 ### Priority 1
-- **GPX file upload** — Allow users to upload their own GPX files instead of having to use strava.
 - **Photo support** — Allow users to attach photos to updates 
 - **Email notifications** — Let followers subscribe to a hiker's tracker and receive email updates when new trail updates are posted
+- **GPX file upload** — Allow users to upload their own GPX files instead of having to use strava.
 - **Elevation profile chart** — Display an elevation chart of the PCT showing the hiker's current position
 - **Multiple trail support** — Expand beyond the PCT to support other long-distance trails (AT, CDT, etc.)
-
-### Priority 2
-
 
 ### Completed
 - **NOBO/SOBO direction support** — Users can select hiking direction, map shows completed vs remaining sections
