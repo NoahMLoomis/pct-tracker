@@ -50,6 +50,10 @@ export default function DashboardClient({
 	const [updSaving, setUpdSaving] = useState(false);
 	const [updError, setUpdError] = useState<string | null>(null);
 
+	const [confirmDelete, setConfirmDelete] = useState(false);
+	const [deleting, setDeleting] = useState(false);
+	const [deleteError, setDeleteError] = useState<string | null>(null);
+
 	const handleSave = async () => {
 		setSaveError(null);
 		setSyncResult(null);
@@ -210,6 +214,24 @@ export default function DashboardClient({
 				if (editingId === id) resetUpdateForm();
 			}
 		} catch {}
+	};
+
+	const handleDeleteAccount = async () => {
+		setDeleting(true);
+		setDeleteError(null);
+		try {
+			const res = await fetch("/api/account", { method: "DELETE" });
+			if (!res.ok) {
+				const data = await res.json();
+				setDeleteError(data.error || "Failed to delete account.");
+				setDeleting(false);
+				return;
+			}
+			window.location.href = "/";
+		} catch {
+			setDeleteError("Something went wrong. Please try again.");
+			setDeleting(false);
+		}
 	};
 
 	const dirBtnCls = (active: boolean) =>
@@ -494,6 +516,51 @@ export default function DashboardClient({
 								</div>
 							))}
 						</div>
+					</div>
+				)}
+			</div>
+
+			<div className="bg-card border border-[rgba(248,81,73,0.3)] rounded-2xl p-[18px]">
+				<div className="font-bold mb-1.5 text-danger">Danger Zone</div>
+				{!confirmDelete ? (
+					<div className="grid gap-3 mt-3">
+						<p className="text-muted text-xs leading-relaxed">
+							Permanently delete your account, all trail updates, stats, and
+							subscriber data. This cannot be undone.
+						</p>
+						<button
+							onClick={() => setConfirmDelete(true)}
+							className="inline-block px-5 py-2.5 rounded-full border border-[rgba(248,81,73,0.4)] text-danger bg-[rgba(248,81,73,0.08)] hover:bg-[rgba(248,81,73,0.15)] cursor-pointer justify-self-start"
+						>
+							Delete Account
+						</button>
+					</div>
+				) : (
+					<div className="grid gap-3 mt-3">
+						<p className="text-sm leading-relaxed">
+							Are you sure? This will permanently delete your account and all
+							associated data.
+						</p>
+						<div className="flex gap-2">
+							<button
+								onClick={handleDeleteAccount}
+								disabled={deleting}
+								className="inline-block px-5 py-2.5 rounded-full border border-[rgba(248,81,73,0.4)] text-danger bg-[rgba(248,81,73,0.08)] hover:bg-[rgba(248,81,73,0.15)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+							>
+								{deleting ? "Deleting..." : "Yes, delete my account"}
+							</button>
+							<button
+								onClick={() => {
+									setConfirmDelete(false);
+									setDeleteError(null);
+								}}
+								disabled={deleting}
+								className="inline-block px-5 py-2.5 rounded-full bg-card border border-line cursor-pointer disabled:opacity-50"
+							>
+								Cancel
+							</button>
+						</div>
+						{deleteError && <p className="text-sm text-danger">{deleteError}</p>}
 					</div>
 				)}
 			</div>
