@@ -27,7 +27,7 @@ export default async function TrackerLayout({
 				displayName={user.display_name}
 				lighterpackUrl={user.lighterpack_url}
 			/>
-			<main className="max-w-[980px] mx-auto px-4">{children}</main>
+			<main className="lg:max-w-5/6 max-w-[980px] mx-auto px-4">{children}</main>
 		</>
 	);
 }
