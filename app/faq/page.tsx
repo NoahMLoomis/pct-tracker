@@ -9,14 +9,29 @@ const faqs: { question: string; answer: ReactNode }[] = [
 	{
 		question: "How does it work?",
 		answer:
-			"Connect your Strava account and set your hike start date. PCT Tracker automatically syncs your hiking activities from Strava, filters for ones near the Pacific Crest Trail, and displays your progress on a live map. Your public tracker page shows the full PCT with your completed and remaining sections highlighted, along with stats.",
+			"Sign up with email/password or connect your Strava account, then set your hike start date. Your public tracker page shows the full PCT with your completed and remaining sections highlighted, along with stats and trail updates. If you have Strava linked, activities are synced automatically. If not, your map position is estimated from the location of your latest trail update.",
+	},
+	{
+		question: "Do I need a Strava account?",
+		answer:
+			"No. You can sign up with just an email and password. Without Strava, your map position is set from the location you attach to your most recent trail update, and your distance stats are estimated from that position. Linking Strava gives you precise distance, elevation, and speed stats pulled from your actual activities.",
+	},
+	{
+		question: "Can I attach a photo to a trail update?",
+		answer:
+			"Yes, you can upload one image per update",
+	},
+	{
+		question: "Can followers get notified of new updates?",
+		answer:
+			"Yes. Anyone viewing your public tracker can enter their email on the \"Updates\" page to subscribe. They'll receive an email whenever you post a new trail update." 
 	},
 	{
 		question:
-			"How can i setup my garmin/coros watch to upload to strava automatically?",
+			"How can I set up my Garmin/COROS watch to upload to Strava automatically?",
 		answer: (
 			<>
-				For garmin, follow{" "}
+				For Garmin, follow{" "}
 				<a
 					href="https://support.strava.com/hc/en-us/articles/216918057-Garmin-and-Strava"
 					target="_blank"
@@ -24,7 +39,7 @@ const faqs: { question: string; answer: ReactNode }[] = [
 				>
 					this guide
 				</a>
-				, for coros,{" "}
+				. For COROS,{" "}
 				<a
 					href="https://support.strava.com/hc/en-us/articles/360007816051-COROS-and-Strava"
 					target="_blank"
@@ -32,29 +47,29 @@ const faqs: { question: string; answer: ReactNode }[] = [
 				>
 					this one
 				</a>
-				,
+				.
 			</>
 		),
 	},
 	{
-		question: "What is being stored?",
+		question: "What data is being stored?",
 		answer:
-			"Your Strava athlete ID, display name, and OAuth tokens (to sync your activities). For each activity, the only location we store is the one of your most recent activity, to display your location on the map.",
+			"For email accounts: your email address and a hashed password. For Strava accounts: your athlete ID, display name, and OAuth tokens used to sync activities. Trail updates (title, body, optional location and photo) are stored and shown publicly on your tracker.",
 	},
 	{
-		question: "How often are my activities synced?",
+		question: "How often are my Strava activities synced?",
 		answer:
-			"Activities are synced automatically once per day. A sync also runs whenever you save your settings with a changed start or end date.",
+			"Activities are synced automatically once per day. A sync also runs whenever you save your settings with a changed start or end date. You can also trigger a manual sync from the Strava section of your dashboard.",
 	},
 	{
 		question: "Why aren't all my Strava activities showing up?",
 		answer:
-			"Activities are filtered to only include ones that start within 15 km of the PCT. Non-hiking activities or hikes far from the trail are excluded. Additionally, only activities within your configured date range (start date to end date, or 6 months if no end date) are included. Check your date settings on the dashboard if activities are missing.",
+			"Activities are filtered to only include ones that start within 30 km of the PCT. Non-hiking activities or hikes far from the trail are excluded. Only activities within your configured date range (start date to end date, or 6 months if no end date) are included. Check your date settings on the dashboard if activities are missing.",
 	},
 	{
 		question: "Can other people see my tracker?",
 		answer:
-			"Yes, your public tracker page is accessible to anyone with the link. It shows your map progress, stats, and trail updates. It does not expose your Strava credentials, tokens, or any private account information.",
+			"Yes, your public tracker page is accessible to anyone with the link. It shows your map progress, stats, and trail updates. It does not expose your password, Strava tokens, or any private account information.",
 	},
 	{
 		question: 'When I click on "Gear" it brings me to a broken page',
@@ -169,7 +184,7 @@ export default function FAQPage() {
 							Home
 						</Link>
 						<Link
-							href="/api/auth/strava"
+							href="/login"
 							className="no-underline text-muted px-2.5 py-2 rounded-full border border-line bg-[rgba(17,22,28,0.35)]"
 						>
 							Login
