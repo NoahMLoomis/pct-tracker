@@ -37,9 +37,8 @@ export default function LandingPage() {
 						Track your PCT hike
 					</h1>
 					<p className="text-muted text-base leading-relaxed mb-9">
-						Get a live map of your Pacific Crest Trail progress and share it
-						with friends and family. Connect Strava for automatic activity sync,
-						or sign up with email and post location updates manually.
+						Get a live map of your journey on the Pacific Crest Trail and share it
+						with friends and family. Connect Strava for automatic activity sync.
 					</p>
 					<Link
 						href="/login"

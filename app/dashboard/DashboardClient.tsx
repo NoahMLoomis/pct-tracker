@@ -1,7 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import imageCompression from "browser-image-compression";
 import type { SyncState, TrailUpdate, User } from "@/lib/types";
 
 const LocationPicker = dynamic(() => import("@/components/LocationPicker"), {
@@ -49,6 +50,11 @@ export default function DashboardClient({
 	const [lon, setLon] = useState<number | null>(null);
 	const [updSaving, setUpdSaving] = useState(false);
 	const [updError, setUpdError] = useState<string | null>(null);
+
+	const [photoFile, setPhotoFile] = useState<File | null>(null);
+	const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+	const [currentPhotoUrl, setCurrentPhotoUrl] = useState<string | null>(null);
+	const photoInputRef = useRef<HTMLInputElement>(null);
 
 	const [slug, setSlug] = useState(user.slug || "");
 
@@ -138,6 +144,9 @@ export default function DashboardClient({
 		setLat(null);
 		setLon(null);
 		setUpdError(null);
+		setPhotoFile(null);
+		setPhotoPreview(null);
+		setCurrentPhotoUrl(null);
 	};
 
 	const handleEditClick = (u: TrailUpdate) => {
@@ -154,6 +163,19 @@ export default function DashboardClient({
 			setLon(null);
 		}
 		setUpdError(null);
+		setPhotoFile(null);
+		setPhotoPreview(u.photo_url ?? null);
+		setCurrentPhotoUrl(u.photo_url ?? null);
+	};
+
+	const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+		setPhotoFile(file);
+		setCurrentPhotoUrl(null);
+		const reader = new FileReader();
+		reader.onload = (ev) => setPhotoPreview(ev.target?.result as string);
+		reader.readAsDataURL(file);
 	};
 
 	const handleUpdateSubmit = async () => {
@@ -164,12 +186,36 @@ export default function DashboardClient({
 		setUpdSaving(true);
 		setUpdError(null);
 		try {
+			let photoUrl = currentPhotoUrl;
+
+			if (photoFile) {
+				const compressed = await imageCompression(photoFile, {
+					maxSizeMB: 0.3,
+					maxWidthOrHeight: 1920,
+					useWebWorker: true,
+				});
+				const fd = new FormData();
+				fd.append("file", compressed, "photo.jpg");
+				const uploadRes = await fetch("/api/updates/upload", {
+					method: "POST",
+					body: fd,
+				});
+				const uploadData = await uploadRes.json();
+				if (!uploadRes.ok) {
+					setUpdError(uploadData.error || "Photo upload failed.");
+					setUpdSaving(false);
+					return;
+				}
+				photoUrl = uploadData.url;
+			}
+
 			const payload: Record<string, unknown> = {
 				action: editingId ? "update" : "create",
 				title: title.trim(),
 				body: body.trim(),
 				lat: addLocation ? lat : null,
 				lon: addLocation ? lon : null,
+				photo_url: photoUrl,
 			};
 			if (editingId) payload.id = editingId;
 
@@ -193,6 +239,7 @@ export default function DashboardClient({
 										body: body.trim(),
 										lat: addLocation ? lat : null,
 										lon: addLocation ? lon : null,
+										photo_url: photoUrl,
 									}
 								: u,
 						),
@@ -478,6 +525,44 @@ export default function DashboardClient({
 							</>
 						)}
 					</div>
+					<div>
+						<input
+							ref={photoInputRef}
+							type="file"
+							accept="image/*"
+							className="hidden"
+							onChange={handlePhotoChange}
+						/>
+						{photoPreview ? (
+							<div className="mt-2 relative inline-block">
+								<img
+									src={photoPreview}
+									alt="Update photo"
+									className="max-h-48 rounded-lg border border-line object-cover"
+								/>
+								<button
+									type="button"
+									onClick={() => {
+										setPhotoFile(null);
+										setPhotoPreview(null);
+										setCurrentPhotoUrl(null);
+										if (photoInputRef.current) photoInputRef.current.value = "";
+									}}
+									className="absolute top-1 right-1 px-1.5 py-0.5 rounded-md bg-[rgba(0,0,0,0.6)] text-white text-xs cursor-pointer"
+								>
+									Remove
+								</button>
+							</div>
+						) : (
+							<button
+								type="button"
+								onClick={() => photoInputRef.current?.click()}
+								className="mt-1 flex items-center gap-1.5 px-4 py-2 rounded-[10px] border border-line bg-card text-muted text-sm cursor-pointer hover:border-accent"
+							>
+								Add photo
+							</button>
+						)}
+					</div>
 					<div className="flex gap-2">
 						<button
 							type="button"
@@ -524,7 +609,7 @@ export default function DashboardClient({
 											</div>
 											<div className="text-muted text-xs mt-1">
 												{u.body.length > 120
-													? u.body.slice(0, 120) + "..."
+													? `${u.body.slice(0, 120)}...`
 													: u.body}
 											</div>
 										</div>

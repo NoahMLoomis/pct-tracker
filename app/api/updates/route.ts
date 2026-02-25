@@ -5,6 +5,13 @@ import { createServiceClient } from "@/lib/supabase/server";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+function storagePathFromUrl(url: string): string | null {
+	const marker = "/storage/v1/object/public/update-photos/";
+	const idx = url.indexOf(marker);
+	if (idx === -1) return null;
+	return url.slice(idx + marker.length);
+}
+
 async function notifySubscribers(
 	supabase: ReturnType<typeof createServiceClient>,
 	userId: string,
@@ -86,6 +93,7 @@ export async function POST(request: NextRequest) {
 				body: body.body.trim(),
 				lat: body.lat ?? null,
 				lon: body.lon ?? null,
+				photo_url: body.photo_url ?? null,
 			})
 			.select()
 			.single();
@@ -120,6 +128,14 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
+		// Fetch old photo_url so we can clean up storage if it changed
+		const { data: existing } = await supabase
+			.from("trail_updates")
+			.select("photo_url")
+			.eq("id", body.id)
+			.eq("user_id", userId)
+			.single();
+
 		const { error } = await supabase
 			.from("trail_updates")
 			.update({
@@ -127,12 +143,19 @@ export async function POST(request: NextRequest) {
 				body: body.body.trim(),
 				lat: body.lat ?? null,
 				lon: body.lon ?? null,
+				photo_url: body.photo_url ?? null,
 			})
 			.eq("id", body.id)
 			.eq("user_id", userId);
 
 		if (error) {
 			return NextResponse.json({ error: error.message }, { status: 500 });
+		}
+
+		// Delete old photo from storage if it was replaced or removed
+		if (existing?.photo_url && existing.photo_url !== body.photo_url) {
+			const oldPath = storagePathFromUrl(existing.photo_url);
+			if (oldPath) await supabase.storage.from("update-photos").remove([oldPath]);
 		}
 
 		return NextResponse.json({ ok: true });
@@ -146,6 +169,14 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
+		// Fetch photo_url before deleting so we can clean up storage
+		const { data: existing } = await supabase
+			.from("trail_updates")
+			.select("photo_url")
+			.eq("id", body.id)
+			.eq("user_id", userId)
+			.single();
+
 		const { error } = await supabase
 			.from("trail_updates")
 			.delete()
@@ -154,6 +185,11 @@ export async function POST(request: NextRequest) {
 
 		if (error) {
 			return NextResponse.json({ error: error.message }, { status: 500 });
+		}
+
+		if (existing?.photo_url) {
+			const path = storagePathFromUrl(existing.photo_url);
+			if (path) await supabase.storage.from("update-photos").remove([path]);
 		}
 
 		return NextResponse.json({ ok: true });

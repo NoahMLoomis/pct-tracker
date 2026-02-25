@@ -20,7 +20,7 @@ export async function GET(
 
 	const { data: updates } = await supabase
 		.from("trail_updates")
-		.select("id, user_id, title, body, lat, lon, created_at")
+		.select("id, user_id, title, body, lat, lon, photo_url, created_at")
 		.eq("user_id", user.id)
 		.order("created_at", { ascending: false });
 
