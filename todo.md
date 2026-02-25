@@ -3,6 +3,8 @@
 - Would it be possible, instead of getting the activity stats, to use only the last position, then calculate the stats from that using the NOBO or SOBO to determine starting point? This could reduce even further the requests made to strava
 - Add metadata for SEO
 - Verify phone usability
+- Let users change their slug
+- One image associated with a post
 
 ## Possible blockers:
 

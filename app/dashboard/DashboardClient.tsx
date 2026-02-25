@@ -50,6 +50,8 @@ export default function DashboardClient({
 	const [updSaving, setUpdSaving] = useState(false);
 	const [updError, setUpdError] = useState<string | null>(null);
 
+	const [slug, setSlug] = useState(user.slug || "");
+
 	const [confirmDelete, setConfirmDelete] = useState(false);
 	const [deleting, setDeleting] = useState(false);
 	const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -71,12 +73,18 @@ export default function DashboardClient({
 					hike_start_date: hikeStartDate,
 					hike_end_date: hikeEndDate || null,
 					lighterpack_url: lighterpackUrl || null,
+					slug: slug.trim() || undefined,
 				}),
 			});
 			if (!res.ok) {
 				const data = await res.json();
 				setSaveError(data.error || "Save failed.");
 				setSaving(false);
+				return;
+			}
+
+			if (slug.trim() && slug.trim() !== user.slug) {
+				window.location.reload();
 				return;
 			}
 
@@ -329,7 +337,28 @@ export default function DashboardClient({
 							be the code
 						</p>
 					</div>
+					<div className="mt-1 grid gap-3">
+						<label>
+							<span className="text-muted text-xs">URL Slug</span>
+							<input
+								type="text"
+								value={slug}
+								onChange={(e) => {
+									setSlug(e.target.value.toLowerCase());
+								}}
+								placeholder="your-slug"
+								className={inputCls}
+							/>
+						</label>
+						<p className="text-muted text-xs mt-1.5">
+							Your public tracker URL: {process.env.NEXT_PUBLIC_BASE_URL}
+							/tracker/
+							<strong className="text-text">{slug || "your-slug"}</strong>
+						</p>
+					</div>
+
 					<button
+						type="button"
 						onClick={handleSave}
 						disabled={saving || hikeStartDate.length <= 0 || syncing}
 						className="inline-block no-underline px-5 py-2.5 rounded-full border border-[rgba(126,231,135,0.35)] text-text bg-[rgba(126,231,135,0.1)] hover:bg-[rgba(126,231,135,0.18)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed justify-self-start"
@@ -355,6 +384,7 @@ export default function DashboardClient({
 							trigger a manual sync below.
 						</p>
 						<button
+							type="button"
 							onClick={handleManualSync}
 							disabled={syncing || saving}
 							className="inline-block no-underline px-5 py-2.5 rounded-full border border-[rgba(126,231,135,0.35)] text-text bg-[rgba(126,231,135,0.1)] hover:bg-[rgba(126,231,135,0.18)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed justify-self-start"
@@ -450,6 +480,7 @@ export default function DashboardClient({
 					</div>
 					<div className="flex gap-2">
 						<button
+							type="button"
 							onClick={handleUpdateSubmit}
 							disabled={updSaving || !title.trim() || !body.trim()}
 							className="inline-block no-underline px-5 py-2.5 rounded-full border border-[rgba(126,231,135,0.35)] text-text bg-[rgba(126,231,135,0.1)] hover:bg-[rgba(126,231,135,0.18)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
@@ -462,6 +493,7 @@ export default function DashboardClient({
 						</button>
 						{editingId && (
 							<button
+								type="button"
 								onClick={resetUpdateForm}
 								className="inline-block px-5 py-2.5 rounded-full bg-card border border-line cursor-pointer"
 							>
@@ -498,12 +530,14 @@ export default function DashboardClient({
 										</div>
 										<div className="flex gap-1.5 shrink-0">
 											<button
+												type="button"
 												onClick={() => handleEditClick(u)}
 												className="px-2.5 py-1 rounded-lg border border-line bg-card text-text cursor-pointer text-[13px]"
 											>
 												Edit
 											</button>
 											<button
+												type="button"
 												onClick={() => handleDelete(u.id)}
 												className="px-2.5 py-1 rounded-lg border border-line bg-card text-danger cursor-pointer text-[13px]"
 											>
@@ -527,6 +561,7 @@ export default function DashboardClient({
 							subscriber data. This cannot be undone.
 						</p>
 						<button
+							type="button"
 							onClick={() => setConfirmDelete(true)}
 							className="inline-block px-5 py-2.5 rounded-full border border-[rgba(248,81,73,0.4)] text-danger bg-[rgba(248,81,73,0.08)] hover:bg-[rgba(248,81,73,0.15)] cursor-pointer justify-self-start"
 						>
@@ -541,6 +576,7 @@ export default function DashboardClient({
 						</p>
 						<div className="flex gap-2">
 							<button
+								type="button"
 								onClick={handleDeleteAccount}
 								disabled={deleting}
 								className="inline-block px-5 py-2.5 rounded-full border border-[rgba(248,81,73,0.4)] text-danger bg-[rgba(248,81,73,0.08)] hover:bg-[rgba(248,81,73,0.15)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
@@ -548,6 +584,7 @@ export default function DashboardClient({
 								{deleting ? "Deleting..." : "Yes, delete my account"}
 							</button>
 							<button
+								type="button"
 								onClick={() => {
 									setConfirmDelete(false);
 									setDeleteError(null);
