@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import dynamic from "next/dynamic";
-import type { User, SyncState, TrailUpdate } from "@/lib/types";
+import { useState } from "react";
+import type { SyncState, TrailUpdate, User } from "@/lib/types";
 
 const LocationPicker = dynamic(() => import("@/components/LocationPicker"), {
 	ssr: false,
@@ -247,9 +247,7 @@ export default function DashboardClient({
 				<p className="mt-2">
 					<strong>{user.display_name}</strong>
 				</p>
-				{user.email && (
-					<p className="text-muted text-xs mt-1">{user.email}</p>
-				)}
+				{user.email && <p className="text-muted text-xs mt-1">{user.email}</p>}
 				<p className="mt-3">
 					Public tracker url:{" "}
 					<a
@@ -361,7 +359,9 @@ export default function DashboardClient({
 							disabled={syncing || saving}
 							className="inline-block no-underline px-5 py-2.5 rounded-full border border-[rgba(126,231,135,0.35)] text-text bg-[rgba(126,231,135,0.1)] hover:bg-[rgba(126,231,135,0.18)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed justify-self-start"
 						>
-							{syncing ? "Syncing... this could take a few minutes" : "Sync Strava"}
+							{syncing
+								? "Syncing... this could take a few minutes"
+								: "Sync Strava"}
 						</button>
 						{syncResult && <p className="text-sm">{syncResult}</p>}
 						<p className="text-muted text-xs">
@@ -386,8 +386,6 @@ export default function DashboardClient({
 					</div>
 				)}
 			</div>
-
-
 
 			<div className="bg-card border border-line rounded-2xl p-[18px]">
 				<div className="font-bold mb-1.5">
@@ -560,7 +558,9 @@ export default function DashboardClient({
 								Cancel
 							</button>
 						</div>
-						{deleteError && <p className="text-sm text-danger">{deleteError}</p>}
+						{deleteError && (
+							<p className="text-sm text-danger">{deleteError}</p>
+						)}
 					</div>
 				)}
 			</div>

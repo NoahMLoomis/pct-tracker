@@ -111,9 +111,15 @@ let _trailCoords: [number, number][] | null = null;
 function getTrailCoords(): [number, number][] {
 	if (_trailCoords) return _trailCoords;
 	try {
-		const raw = readFileSync(join(process.cwd(), "public/pct-trail.geojson"), "utf8");
+		const raw = readFileSync(
+			join(process.cwd(), "public/pct-trail.geojson"),
+			"utf8",
+		);
 		const geojson = JSON.parse(raw);
-		_trailCoords = geojson.features[0].geometry.coordinates as [number, number][];
+		_trailCoords = geojson.features[0].geometry.coordinates as [
+			number,
+			number,
+		][];
 	} catch {
 		// Fallback to simplified waypoints if file unavailable
 		_trailCoords = W.map(([lat, lon]) => [lon, lat] as [number, number]);
@@ -122,7 +128,10 @@ function getTrailCoords(): [number, number][] {
 }
 
 // Snap a coordinate to the nearest point on the full PCT trail.
-export function snapToTrail(lat: number, lon: number): { lat: number; lon: number } {
+export function snapToTrail(
+	lat: number,
+	lon: number,
+): { lat: number; lon: number } {
 	const coords = getTrailCoords();
 	let minDist = Infinity;
 	let nearestLat = coords[0][1];

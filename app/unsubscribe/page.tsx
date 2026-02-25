@@ -14,14 +14,18 @@ function UnsubscribeContent() {
 			setStatus("error");
 			return;
 		}
-		fetch(`/api/subscribe?token=${encodeURIComponent(token)}`, { method: "DELETE" })
+		fetch(`/api/subscribe?token=${encodeURIComponent(token)}`, {
+			method: "DELETE",
+		})
 			.then((r) => setStatus(r.ok ? "done" : "error"))
 			.catch(() => setStatus("error"));
 	}, [token]);
 
 	return (
 		<div className="bg-card border border-line rounded-2xl p-[18px]">
-			{status === "loading" && <p className="text-muted text-sm">Unsubscribing...</p>}
+			{status === "loading" && (
+				<p className="text-muted text-sm">Unsubscribing...</p>
+			)}
 			{status === "done" && (
 				<p className="text-sm">
 					You've been unsubscribed and won't receive any more emails.
@@ -45,7 +49,9 @@ export default function UnsubscribePage() {
 					<UnsubscribeContent />
 				</Suspense>
 				<p className="text-center mt-4 text-xs text-muted">
-					<Link href="/" className="text-accent">PCT Tracker</Link>
+					<Link href="/" className="text-accent">
+						PCT Tracker
+					</Link>
 				</p>
 			</div>
 		</main>

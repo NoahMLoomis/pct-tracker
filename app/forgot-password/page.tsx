@@ -34,7 +34,10 @@ export default function ForgotPasswordPage() {
 		<>
 			<header className="sticky top-0 z-[1000] backdrop-blur-md bg-[rgba(11,14,17,0.75)] border-b border-line">
 				<div className="max-w-[980px] mx-auto px-4 flex items-center justify-between gap-3 py-3.5">
-					<Link href="/" className="font-[750] tracking-tight no-underline text-text">
+					<Link
+						href="/"
+						className="font-[750] tracking-tight no-underline text-text"
+					>
 						PCT Tracker
 					</Link>
 				</div>
@@ -42,7 +45,9 @@ export default function ForgotPasswordPage() {
 
 			<main className="max-w-[980px] mx-auto px-4 pt-12 pb-15">
 				<div className="max-w-[420px] mx-auto">
-					<h1 className="text-2xl font-black mb-6 text-center">Reset password</h1>
+					<h1 className="text-2xl font-black mb-6 text-center">
+						Reset password
+					</h1>
 
 					<div className="bg-card border border-line rounded-2xl p-[18px]">
 						{submitted ? (

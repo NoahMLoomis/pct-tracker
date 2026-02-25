@@ -51,11 +51,7 @@ Most of this app was built in a weekend with Claude Code.
 
 4. **Run database migrations**
 
-   Apply the Supabase migrations in `supabase/migrations/` to your project:
-
-   ```bash
-   npx supabase db push
-   ```
+   Apply the SQL files in `supabase/migrations/` in order via the [Supabase SQL editor](https://supabase.com/dashboard/project/_/sql).
 
 5. **Start the dev server**
 

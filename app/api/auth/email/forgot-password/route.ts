@@ -27,7 +27,10 @@ export async function POST(request: NextRequest) {
 	if (!user.password_hash) {
 		// Account exists but was created via Strava — no password to reset
 		return NextResponse.json(
-			{ error: "This account uses Strava to sign in. Use the Strava login button instead." },
+			{
+				error:
+					"This account uses Strava to sign in. Use the Strava login button instead.",
+			},
 			{ status: 400 },
 		);
 	}

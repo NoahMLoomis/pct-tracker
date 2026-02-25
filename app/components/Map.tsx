@@ -321,8 +321,12 @@ export default function MapView({ slug, updates }: MapProps) {
 			const [coordsResult, posResult] = await Promise.allSettled([
 				fetch("/pct-trail.geojson")
 					.then((r) => r.json())
-					.then((d) => d.features?.[0]?.geometry?.coordinates as [number, number][]),
-				fetch(`/api/latest/${slug}`, { cache: "no-store" }).then((r) => r.json()),
+					.then(
+						(d) => d.features?.[0]?.geometry?.coordinates as [number, number][],
+					),
+				fetch(`/api/latest/${slug}`, { cache: "no-store" }).then((r) =>
+					r.json(),
+				),
 			]);
 
 			if (coordsResult.status === "fulfilled" && coordsResult.value) {
@@ -333,11 +337,17 @@ export default function MapView({ slug, updates }: MapProps) {
 				const pos = posResult.value;
 				if (pos.lat || pos.lon) {
 					const lngLat: [number, number] = [pos.lon, pos.lat];
-					markerRef.current = new maplibregl.Marker({ element: createBlinkMarkerEl() })
+					markerRef.current = new maplibregl.Marker({
+						element: createBlinkMarkerEl(),
+					})
 						.setLngLat(lngLat)
 						.addTo(map);
 					if (trailCoordsRef.current) {
-						const splitIdx = findNearestIndex(trailCoordsRef.current, pos.lon, pos.lat);
+						const splitIdx = findNearestIndex(
+							trailCoordsRef.current,
+							pos.lon,
+							pos.lat,
+						);
 						splitTrail(splitIdx, pos.direction || "NOBO");
 					}
 				}

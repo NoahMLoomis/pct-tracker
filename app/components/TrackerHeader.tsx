@@ -26,9 +26,9 @@ export default function TrackerHeader({
 		<header className="sticky top-0 z-[1000] backdrop-blur-md bg-[rgba(11,14,17,0.75)] border-b border-line">
 			<div className="max-w-[980px] mx-auto px-4 flex items-center justify-between gap-3 py-3.5 max-[540px]:flex-col max-[540px]:items-start">
 				<div>
-					<div className="font-[750] tracking-tight">
+					<Link href={base} className="font-[750] tracking-tight" style={{ color: "inherit", textDecoration: "none" }}>
 						{displayName}&apos;s PCT Tracker
-					</div>
+					</Link>
 				</div>
 
 				<nav className="flex gap-2 shrink-0">

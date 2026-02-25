@@ -60,7 +60,10 @@ export async function GET(request: NextRequest) {
 
 				if (claimed && claimed.id !== state.userId) {
 					return NextResponse.redirect(
-						new URL("/dashboard?error=strava_already_linked", request.nextUrl.origin),
+						new URL(
+							"/dashboard?error=strava_already_linked",
+							request.nextUrl.origin,
+						),
 					);
 				}
 

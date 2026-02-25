@@ -7,12 +7,18 @@ export async function POST(request: NextRequest) {
 	const { slug, email } = body;
 
 	if (!slug || !email) {
-		return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
+		return NextResponse.json(
+			{ error: "Missing required fields." },
+			{ status: 400 },
+		);
 	}
 
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	if (!emailRegex.test(email)) {
-		return NextResponse.json({ error: "Invalid email address." }, { status: 400 });
+		return NextResponse.json(
+			{ error: "Invalid email address." },
+			{ status: 400 },
+		);
 	}
 
 	const supabase = createServiceClient();
@@ -28,19 +34,20 @@ export async function POST(request: NextRequest) {
 	}
 
 	// Upsert — idempotent if already subscribed
-	const { error } = await supabase
-		.from("subscriptions")
-		.upsert(
-			{
-				user_id: user.id,
-				email: email.toLowerCase(),
-				unsubscribe_token: randomBytes(32).toString("hex"),
-			},
-			{ onConflict: "user_id,email", ignoreDuplicates: true },
-		);
+	const { error } = await supabase.from("subscriptions").upsert(
+		{
+			user_id: user.id,
+			email: email.toLowerCase(),
+			unsubscribe_token: randomBytes(32).toString("hex"),
+		},
+		{ onConflict: "user_id,email", ignoreDuplicates: true },
+	);
 
 	if (error) {
-		return NextResponse.json({ error: "Failed to subscribe." }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Failed to subscribe." },
+			{ status: 500 },
+		);
 	}
 
 	return NextResponse.json({ ok: true });
@@ -61,7 +68,10 @@ export async function DELETE(request: NextRequest) {
 		.eq("unsubscribe_token", token);
 
 	if (error) {
-		return NextResponse.json({ error: "Failed to unsubscribe." }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Failed to unsubscribe." },
+			{ status: 500 },
+		);
 	}
 
 	return NextResponse.json({ ok: true });

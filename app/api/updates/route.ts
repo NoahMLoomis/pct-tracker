@@ -11,8 +11,15 @@ async function notifySubscribers(
 	update: { title: string; body: string; created_at: string },
 ) {
 	const [{ data: user }, { data: subs }] = await Promise.all([
-		supabase.from("users").select("display_name, slug").eq("id", userId).single(),
-		supabase.from("subscriptions").select("email, unsubscribe_token").eq("user_id", userId),
+		supabase
+			.from("users")
+			.select("display_name, slug")
+			.eq("id", userId)
+			.single(),
+		supabase
+			.from("subscriptions")
+			.select("email, unsubscribe_token")
+			.eq("user_id", userId),
 	]);
 
 	if (!user || !subs || subs.length === 0) return;

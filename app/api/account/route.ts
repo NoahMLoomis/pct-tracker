@@ -17,7 +17,10 @@ export async function DELETE() {
 		.eq("id", session.userId);
 
 	if (error) {
-		return NextResponse.json({ error: "Failed to delete account." }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Failed to delete account." },
+			{ status: 500 },
+		);
 	}
 
 	const cookieStore = await cookies();

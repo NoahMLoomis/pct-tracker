@@ -55,7 +55,9 @@ export async function GET(
 				statsSource: "strava",
 				activities: rows,
 			},
-			{ headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } },
+			{
+				headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" },
+			},
 		);
 	}
 
@@ -95,7 +97,9 @@ export async function GET(
 				statsSource: "position",
 				activities: [],
 			},
-			{ headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } },
+			{
+				headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" },
+			},
 		);
 	}
 

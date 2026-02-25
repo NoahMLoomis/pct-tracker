@@ -32,7 +32,11 @@ export async function GET(
 		if (pos) {
 			return NextResponse.json(
 				{ lat: pos.lat, lon: pos.lon, ts: pos.activity_date || "", direction },
-				{ headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } },
+				{
+					headers: {
+						"Cache-Control": "s-maxage=300, stale-while-revalidate=60",
+					},
+				},
 			);
 		}
 		// Fall through to manual update location if no Strava position yet

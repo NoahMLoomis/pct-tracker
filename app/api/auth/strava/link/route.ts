@@ -12,7 +12,10 @@ export async function GET(request: NextRequest) {
 		return NextResponse.redirect(new URL("/login", request.nextUrl.origin));
 	}
 
-	const state = await new SignJWT({ type: "link", userId: session.userId } as unknown as Record<string, unknown>)
+	const state = await new SignJWT({
+		type: "link",
+		userId: session.userId,
+	} as unknown as Record<string, unknown>)
 		.setProtectedHeader({ alg: "HS256" })
 		.setExpirationTime("10m")
 		.sign(SECRET);

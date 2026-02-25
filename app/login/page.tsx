@@ -40,7 +40,10 @@ export default function LoginPage() {
 		<>
 			<header className="sticky top-0 z-[1000] backdrop-blur-md bg-[rgba(11,14,17,0.75)] border-b border-line">
 				<div className="max-w-[980px] mx-auto px-4 flex items-center justify-between gap-3 py-3.5">
-					<Link href="/" className="font-[750] tracking-tight no-underline text-text">
+					<Link
+						href="/"
+						className="font-[750] tracking-tight no-underline text-text"
+					>
 						PCT Tracker
 					</Link>
 					<nav className="flex gap-2 shrink-0">

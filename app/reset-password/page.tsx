@@ -60,9 +60,7 @@ function ResetPasswordForm() {
 
 	if (done) {
 		return (
-			<p className="text-sm">
-				Password updated. Redirecting to sign in...
-			</p>
+			<p className="text-sm">Password updated. Redirecting to sign in...</p>
 		);
 	}
 
@@ -109,7 +107,10 @@ export default function ResetPasswordPage() {
 		<>
 			<header className="sticky top-0 z-[1000] backdrop-blur-md bg-[rgba(11,14,17,0.75)] border-b border-line">
 				<div className="max-w-[980px] mx-auto px-4 flex items-center justify-between gap-3 py-3.5">
-					<Link href="/" className="font-[750] tracking-tight no-underline text-text">
+					<Link
+						href="/"
+						className="font-[750] tracking-tight no-underline text-text"
+					>
 						PCT Tracker
 					</Link>
 				</div>
@@ -117,9 +118,13 @@ export default function ResetPasswordPage() {
 
 			<main className="max-w-[980px] mx-auto px-4 pt-12 pb-15">
 				<div className="max-w-[420px] mx-auto">
-					<h1 className="text-2xl font-black mb-6 text-center">Set new password</h1>
+					<h1 className="text-2xl font-black mb-6 text-center">
+						Set new password
+					</h1>
 					<div className="bg-card border border-line rounded-2xl p-[18px]">
-						<Suspense fallback={<p className="text-muted text-sm">Loading...</p>}>
+						<Suspense
+							fallback={<p className="text-muted text-sm">Loading...</p>}
+						>
 							<ResetPasswordForm />
 						</Suspense>
 					</div>

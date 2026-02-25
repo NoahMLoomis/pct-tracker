@@ -23,7 +23,10 @@ export async function POST(request: NextRequest) {
 
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	if (!emailRegex.test(email)) {
-		return NextResponse.json({ error: "Invalid email address." }, { status: 400 });
+		return NextResponse.json(
+			{ error: "Invalid email address." },
+			{ status: 400 },
+		);
 	}
 
 	if (password.length < 8) {
@@ -84,7 +87,10 @@ export async function POST(request: NextRequest) {
 		.single();
 
 	if (error || !newUser) {
-		return NextResponse.json({ error: "Failed to create account." }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Failed to create account." },
+			{ status: 500 },
+		);
 	}
 
 	await supabase.from("sync_state").insert({ user_id: newUser.id });
