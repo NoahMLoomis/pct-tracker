@@ -102,8 +102,8 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: error.message }, { status: 500 });
 		}
 
-		// Fire-and-forget — don't let email failures block the response
-		notifySubscribers(supabase, userId, data).catch(console.error);
+		// Await before responding — fire-and-forget is killed early on Vercel serverless
+		await notifySubscribers(supabase, userId, data).catch(console.error);
 
 		return NextResponse.json(data);
 	}
