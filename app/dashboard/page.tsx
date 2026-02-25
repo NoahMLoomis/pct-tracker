@@ -9,7 +9,7 @@ export const metadata = {
 
 export default async function DashboardPage() {
 	const session = await getSession();
-	if (!session) redirect("/api/auth/strava");
+	if (!session) redirect("/login");
 
 	const supabase = createServiceClient();
 
@@ -19,7 +19,7 @@ export default async function DashboardPage() {
 		.eq("id", session.userId)
 		.single();
 
-	if (!user) redirect("/api/auth/strava");
+	if (!user) redirect("/login");
 
 	const { data: syncState } = await supabase
 		.from("sync_state")
@@ -29,12 +29,13 @@ export default async function DashboardPage() {
 
 	const { data: updates } = await supabase
 		.from("trail_updates")
-		.select("id, user_id, title, body, lat, lon, created_at")
+		.select("id, user_id, title, body, lat, lon, photo_url, created_at")
 		.eq("user_id", session.userId)
 		.order("created_at", { ascending: false });
 
 	const normalizedUpdates = (updates || []).map((u) => ({
 		...u,
+		photo_url: u.photo_url ?? null,
 		created_at: new Date(u.created_at).toISOString(),
 	}));
 

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { jwtVerify } from "jose";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createSession, sessionCookieOptions } from "@/lib/session";
+
+const SECRET = new TextEncoder().encode(
+	process.env.SESSION_SECRET || "dev-secret-change-me",
+);
 
 function slugify(name: string): string {
 	return name
@@ -11,6 +16,8 @@ function slugify(name: string): string {
 
 export async function GET(request: NextRequest) {
 	const code = request.nextUrl.searchParams.get("code");
+	const stateParam = request.nextUrl.searchParams.get("state");
+
 	if (!code) {
 		return NextResponse.redirect(new URL("/", request.nextUrl.origin));
 	}
@@ -35,9 +42,56 @@ export async function GET(request: NextRequest) {
 
 	const tok = await tokenRes.json();
 	const athlete = tok.athlete;
-
 	const supabase = createServiceClient();
 
+	// Check if this is a link flow (logged-in user linking Strava to their account)
+	if (stateParam) {
+		try {
+			const { payload } = await jwtVerify(stateParam, SECRET);
+			const state = payload as unknown as { type: string; userId: string };
+
+			if (state.type === "link" && state.userId) {
+				// Ensure this Strava account isn't already claimed
+				const { data: claimed } = await supabase
+					.from("users")
+					.select("id")
+					.eq("strava_athlete_id", athlete.id)
+					.single();
+
+				if (claimed && claimed.id !== state.userId) {
+					return NextResponse.redirect(
+						new URL("/dashboard?error=strava_already_linked", request.nextUrl.origin),
+					);
+				}
+
+				await supabase
+					.from("users")
+					.update({
+						strava_athlete_id: athlete.id,
+						strava_access_token: tok.access_token,
+						strava_refresh_token: tok.refresh_token,
+						strava_token_expires_at: new Date(
+							tok.expires_at * 1000,
+						).toISOString(),
+						updated_at: new Date().toISOString(),
+					})
+					.eq("id", state.userId);
+
+				// Ensure sync_state row exists
+				await supabase
+					.from("sync_state")
+					.upsert({ user_id: state.userId }, { onConflict: "user_id" });
+
+				return NextResponse.redirect(
+					new URL("/dashboard", request.nextUrl.origin),
+				);
+			}
+		} catch {
+			// Invalid/expired state — fall through to normal login flow
+		}
+	}
+
+	// Normal Strava login flow
 	const displayName =
 		`${athlete.firstname || ""} ${athlete.lastname || ""}`.trim() || "Hiker";
 	const baseSlug = slugify(displayName);
@@ -101,7 +155,6 @@ export async function GET(request: NextRequest) {
 		}
 
 		userId = newUser.id;
-
 		await supabase.from("sync_state").insert({ user_id: userId });
 	}
 

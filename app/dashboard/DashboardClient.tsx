@@ -35,6 +35,7 @@ export default function DashboardClient({
 	const [saving, setSaving] = useState(false);
 	const [saveError, setSaveError] = useState<string | null>(null);
 	const [syncResult, setSyncResult] = useState<string | null>(null);
+	const [syncing, setSyncing] = useState(false);
 
 	const [savedStartDate] = useState(user.hike_start_date || "");
 	const [savedEndDate] = useState(user.hike_end_date || "");
@@ -78,7 +79,7 @@ export default function DashboardClient({
 			const datesChanged =
 				hikeStartDate !== savedStartDate ||
 				(hikeEndDate || "") !== savedEndDate;
-			if (datesChanged) {
+			if (datesChanged && user.strava_athlete_id != null) {
 				setSyncResult("Syncing activities...");
 				try {
 					const syncRes = await fetch("/api/sync", { method: "POST" });
@@ -98,6 +99,23 @@ export default function DashboardClient({
 			setSaveError("Save failed. Please try again.");
 		}
 		setSaving(false);
+	};
+
+	const handleManualSync = async () => {
+		setSyncing(true);
+		setSyncResult(null);
+		try {
+			const syncRes = await fetch("/api/sync", { method: "POST" });
+			const syncData = await syncRes.json();
+			if (syncRes.ok) {
+				setSyncResult(`Synced! ${syncData.added} new activities added.`);
+			} else {
+				setSyncResult(`Sync failed: ${syncData.error}`);
+			}
+		} catch {
+			setSyncResult("Sync failed. Try again later.");
+		}
+		setSyncing(false);
 	};
 
 	const resetUpdateForm = () => {
@@ -207,9 +225,9 @@ export default function DashboardClient({
 				<p className="mt-2">
 					<strong>{user.display_name}</strong>
 				</p>
-				<p className="text-muted text-xs mt-1">
-					Strava Athlete ID: {user.strava_athlete_id}
-				</p>
+				{user.email && (
+					<p className="text-muted text-xs mt-1">{user.email}</p>
+				)}
 				<p className="mt-3">
 					Public tracker url:{" "}
 					<a
@@ -220,6 +238,51 @@ export default function DashboardClient({
 						{process.env.NEXT_PUBLIC_BASE_URL}/tracker/{user.slug}
 					</a>
 				</p>
+			</div>
+
+			<div className="bg-card border border-line rounded-2xl p-[18px]">
+				<div className="font-bold mb-1.5">Strava</div>
+				{user.strava_athlete_id != null ? (
+					<div className="grid gap-3 mt-3">
+						<p className="text-sm">
+							<span className="inline-block px-2 py-0.5 rounded-full bg-[rgba(126,231,135,0.12)] border border-[rgba(126,231,135,0.3)] text-accent text-xs mr-2">
+								Connected
+							</span>
+							Athlete ID: {user.strava_athlete_id}
+						</p>
+						<p className="text-muted text-xs leading-relaxed">
+							Your Strava activities are synced automatically. You can also
+							trigger a manual sync below.
+						</p>
+						<button
+							onClick={handleManualSync}
+							disabled={syncing}
+							className="inline-block no-underline px-5 py-2.5 rounded-full border border-[rgba(126,231,135,0.35)] text-text bg-[rgba(126,231,135,0.1)] hover:bg-[rgba(126,231,135,0.18)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed justify-self-start"
+						>
+							{syncing ? "Syncing..." : "Sync Strava"}
+						</button>
+						{syncResult && <p className="text-sm">{syncResult}</p>}
+						<p className="text-muted text-xs">
+							Last sync: {syncState?.last_sync_at || "Never"}
+							{syncState?.status && syncState.status !== "idle"
+								? ` (${syncState.status})`
+								: ""}
+						</p>
+					</div>
+				) : (
+					<div className="grid gap-3 mt-3">
+						<p className="text-muted text-xs leading-relaxed">
+							Link your Strava account to automatically sync PCT activities and
+							get accurate distance, elevation, and speed stats.
+						</p>
+						<a
+							href="/api/auth/strava/link"
+							className="inline-block no-underline px-5 py-2.5 rounded-full border border-[rgba(252,76,2,0.4)] text-text bg-[rgba(252,76,2,0.1)] hover:bg-[rgba(252,76,2,0.18)] cursor-pointer justify-self-start"
+						>
+							Link Strava Account
+						</a>
+					</div>
+				)}
 			</div>
 
 			<div className="bg-card border border-line rounded-2xl p-[18px]">
@@ -299,13 +362,6 @@ export default function DashboardClient({
 						{saving ? "Saving..." : "Save Settings"}
 					</button>
 					{saveError && <p className="text-sm text-danger">{saveError}</p>}
-					{syncResult && <p className="text-sm">{syncResult}</p>}
-					<p className="text-muted text-xs">
-						Last sync: {syncState?.last_sync_at || "Never"}
-						{syncState?.status && syncState.status !== "idle"
-							? ` (${syncState.status})`
-							: ""}
-					</p>
 				</div>
 			</div>
 

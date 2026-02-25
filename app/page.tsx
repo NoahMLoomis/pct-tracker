@@ -22,7 +22,7 @@ export default function LandingPage() {
 							Support
 						</Link>
 						<Link
-							href="/api/auth/strava"
+							href="/login"
 							className="no-underline text-muted px-2.5 py-2 rounded-full border border-line bg-[rgba(17,22,28,0.35)]"
 						>
 							Login
@@ -37,14 +37,15 @@ export default function LandingPage() {
 						Track your PCT hike
 					</h1>
 					<p className="text-muted text-base leading-relaxed mb-9">
-						Connect your Strava account and get a live map of your Pacific Crest
-						Trail progress. Share your public tracker with friends and family.
+						Get a live map of your Pacific Crest Trail progress and share it
+						with friends and family. Connect Strava for automatic activity sync,
+						or sign up with email and post location updates manually.
 					</p>
 					<Link
-						href="/api/auth/strava"
+						href="/login"
 						className="inline-block no-underline px-7 py-3.5 rounded-full border border-[rgba(126,231,135,0.35)] text-text bg-[rgba(126,231,135,0.1)] hover:bg-[rgba(126,231,135,0.18)] cursor-pointer text-base"
 					>
-						Get Started with Strava
+						Get Started
 					</Link>
 					<p className="text-muted text-sm mt-4">
 						or{" "}
@@ -56,12 +57,12 @@ export default function LandingPage() {
 					<div className="bg-card border border-line rounded-2xl p-[18px] mt-12 text-left">
 						<div className="font-bold mb-1">How it works</div>
 						<ol className="m-0 pl-[18px] text-muted leading-relaxed">
-							<li>Connect your Strava account</li>
-							<li>Your PCT activities are synced automatically</li>
+							<li>Sign up with email or connect your Strava account</li>
+							<li>Post trail updates with your current location</li>
 							<li>
 								Get a public tracker page with a live map, stats, and insights
 							</li>
-							<li>Optionally add a Lighterpack gear list</li>
+							<li>Optionally link Strava for automatic activity sync</li>
 						</ol>
 					</div>
 				</div>
