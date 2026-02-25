@@ -4,6 +4,21 @@ A multi-user Pacific Crest Trail tracker built with Next.js, Supabase, and MapLi
 
 Most of this app was built in a weekend with Claude Code.
 
+## Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | [Next.js 15](https://nextjs.org) |
+| Language | TypeScript |
+| Styling | [Tailwind CSS v4](https://tailwindcss.com) |
+| Database | [Supabase](https://supabase.com) (Postgres + Storage) |
+| Auth | Custom JWT sessions via [jose](https://github.com/panva/jose) — email/password or Strava OAuth |
+| Map | [MapLibre GL JS](https://maplibre.org) |
+| Email | [Resend](https://resend.com) |
+| Linter/Formatter | [Biome](https://biomejs.dev) |
+| Package manager | pnpm |
+| Deployment | [Vercel](https://vercel.com) |
+
 ## Prerequisites
 
 - Node.js 18+

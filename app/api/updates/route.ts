@@ -31,7 +31,6 @@ async function notifySubscribers(
 
 	if (!user || !subs || subs.length === 0) return;
 
-	const trackerUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/tracker/${user.slug}/updates`;
 	const date = new Date(update.created_at).toLocaleDateString(undefined, {
 		year: "numeric",
 		month: "long",
@@ -40,16 +39,17 @@ async function notifySubscribers(
 
 	await Promise.allSettled(
 		subs.map((sub) => {
+			const updateUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/tracker/${user.slug}/updates`;
 			const unsubscribeUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/unsubscribe?token=${sub.unsubscribe_token}`;
 			return resend.emails.send({
 				from: process.env.RESEND_FROM_EMAIL!,
 				to: sub.email,
-				subject: `New update from ${user.display_name}: ${update.title}`,
+				subject: `New update for ${user.display_name}'s PCT journey`,
 				html: `
 					<p><strong>${date}</strong></p>
 					<h2>${update.title}</h2>
 					<p style="white-space: pre-wrap">${update.body}</p>
-					<p><a href="${trackerUrl}">View all updates</a></p>
+					<p><a href="${updateUrl}">See update</a></p>
 					<hr />
 					<p style="font-size: 12px; color: #888;">
 						You're receiving this because you subscribed to ${user.display_name}'s PCT tracker.
