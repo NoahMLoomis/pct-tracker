@@ -241,51 +241,6 @@ export default function DashboardClient({
 			</div>
 
 			<div className="bg-card border border-line rounded-2xl p-[18px]">
-				<div className="font-bold mb-1.5">Strava</div>
-				{user.strava_athlete_id != null ? (
-					<div className="grid gap-3 mt-3">
-						<p className="text-sm">
-							<span className="inline-block px-2 py-0.5 rounded-full bg-[rgba(126,231,135,0.12)] border border-[rgba(126,231,135,0.3)] text-accent text-xs mr-2">
-								Connected
-							</span>
-							Athlete ID: {user.strava_athlete_id}
-						</p>
-						<p className="text-muted text-xs leading-relaxed">
-							Your Strava activities are synced automatically. You can also
-							trigger a manual sync below.
-						</p>
-						<button
-							onClick={handleManualSync}
-							disabled={syncing}
-							className="inline-block no-underline px-5 py-2.5 rounded-full border border-[rgba(126,231,135,0.35)] text-text bg-[rgba(126,231,135,0.1)] hover:bg-[rgba(126,231,135,0.18)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed justify-self-start"
-						>
-							{syncing ? "Syncing..." : "Sync Strava"}
-						</button>
-						{syncResult && <p className="text-sm">{syncResult}</p>}
-						<p className="text-muted text-xs">
-							Last sync: {syncState?.last_sync_at || "Never"}
-							{syncState?.status && syncState.status !== "idle"
-								? ` (${syncState.status})`
-								: ""}
-						</p>
-					</div>
-				) : (
-					<div className="grid gap-3 mt-3">
-						<p className="text-muted text-xs leading-relaxed">
-							Link your Strava account to automatically sync PCT activities and
-							get accurate distance, elevation, and speed stats.
-						</p>
-						<a
-							href="/api/auth/strava/link"
-							className="inline-block no-underline px-5 py-2.5 rounded-full border border-[rgba(252,76,2,0.4)] text-text bg-[rgba(252,76,2,0.1)] hover:bg-[rgba(252,76,2,0.18)] cursor-pointer justify-self-start"
-						>
-							Link Strava Account
-						</a>
-					</div>
-				)}
-			</div>
-
-			<div className="bg-card border border-line rounded-2xl p-[18px]">
 				<div className="font-bold mb-1.5">Settings</div>
 				<div className="grid gap-3 mt-3">
 					<div>
@@ -356,7 +311,7 @@ export default function DashboardClient({
 					</div>
 					<button
 						onClick={handleSave}
-						disabled={saving || hikeStartDate.length <= 0}
+						disabled={saving || hikeStartDate.length <= 0 || syncing}
 						className="inline-block no-underline px-5 py-2.5 rounded-full border border-[rgba(126,231,135,0.35)] text-text bg-[rgba(126,231,135,0.1)] hover:bg-[rgba(126,231,135,0.18)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed justify-self-start"
 					>
 						{saving ? "Saving..." : "Save Settings"}
@@ -364,6 +319,53 @@ export default function DashboardClient({
 					{saveError && <p className="text-sm text-danger">{saveError}</p>}
 				</div>
 			</div>
+
+			<div className="bg-card border border-line rounded-2xl p-[18px]">
+				<div className="font-bold mb-1.5">Strava</div>
+				{user.strava_athlete_id != null ? (
+					<div className="grid gap-3 mt-3">
+						<p className="text-sm">
+							<span className="inline-block px-2 py-0.5 rounded-full bg-[rgba(126,231,135,0.12)] border border-[rgba(126,231,135,0.3)] text-accent text-xs mr-2">
+								Connected
+							</span>
+							Athlete ID: {user.strava_athlete_id}
+						</p>
+						<p className="text-muted text-xs leading-relaxed">
+							Your Strava activities are synced automatically. You can also
+							trigger a manual sync below.
+						</p>
+						<button
+							onClick={handleManualSync}
+							disabled={syncing || saving}
+							className="inline-block no-underline px-5 py-2.5 rounded-full border border-[rgba(126,231,135,0.35)] text-text bg-[rgba(126,231,135,0.1)] hover:bg-[rgba(126,231,135,0.18)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed justify-self-start"
+						>
+							{syncing ? "Syncing... this could take a few minutes" : "Sync Strava"}
+						</button>
+						{syncResult && <p className="text-sm">{syncResult}</p>}
+						<p className="text-muted text-xs">
+							Last sync: {syncState?.last_sync_at || "Never"}
+							{syncState?.status && syncState.status !== "idle"
+								? ` (${syncState.status})`
+								: ""}
+						</p>
+					</div>
+				) : (
+					<div className="grid gap-3 mt-3">
+						<p className="text-muted text-xs leading-relaxed">
+							Link your Strava account to automatically sync PCT activities and
+							get accurate distance, elevation, and speed stats.
+						</p>
+						<a
+							href="/api/auth/strava/link"
+							className="inline-block no-underline px-5 py-2.5 rounded-full border border-[rgba(252,76,2,0.4)] text-text bg-[rgba(252,76,2,0.1)] hover:bg-[rgba(252,76,2,0.18)] cursor-pointer justify-self-start"
+						>
+							Link Strava Account
+						</a>
+					</div>
+				)}
+			</div>
+
+
 
 			<div className="bg-card border border-line rounded-2xl p-[18px]">
 				<div className="font-bold mb-1.5">

@@ -1,14 +1,15 @@
 export interface User {
 	id: string;
-	strava_athlete_id: number;
+	strava_athlete_id: number | null;
+	email: string | null;
 	display_name: string;
 	slug: string;
 	hike_start_date: string;
 	hike_end_date: string | null;
 	direction: "NOBO" | "SOBO";
 	lighterpack_url: string | null;
-	strava_access_token: string;
-	strava_refresh_token: string;
+	strava_access_token: string | null;
+	strava_refresh_token: string | null;
 	strava_token_expires_at: string | null;
 	created_at: string;
 	updated_at: string;
@@ -33,6 +34,8 @@ export interface TrailStats {
 	activityCount: number;
 	firstDate: string | null;
 	lastDate: string | null;
+	daysOnTrail: number | null;
+	statsSource: "strava" | "position";
 	activities: {
 		start_date: string;
 		distance_m: number;
@@ -48,6 +51,7 @@ export interface TrailUpdate {
 	body: string;
 	lat: number | null;
 	lon: number | null;
+	photo_url: string | null;
 	created_at: string;
 }
 

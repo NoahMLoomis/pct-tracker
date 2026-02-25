@@ -21,7 +21,7 @@ export async function GET(
 
 	const direction = user.direction || "NOBO";
 
-	// Strava users: use latest_position table (populated by activity sync)
+	// Strava users: prefer latest_position (populated by activity sync)
 	if (user.strava_athlete_id != null) {
 		const { data: pos } = await supabase
 			.from("latest_position")
@@ -29,17 +29,16 @@ export async function GET(
 			.eq("user_id", user.id)
 			.single();
 
-		if (!pos) {
-			return NextResponse.json({ lat: 0, lon: 0, ts: "", direction });
+		if (pos) {
+			return NextResponse.json(
+				{ lat: pos.lat, lon: pos.lon, ts: pos.activity_date || "", direction },
+				{ headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } },
+			);
 		}
-
-		return NextResponse.json(
-			{ lat: pos.lat, lon: pos.lon, ts: pos.activity_date || "", direction },
-			{ headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } },
-		);
+		// Fall through to manual update location if no Strava position yet
 	}
 
-	// Non-Strava users: use latest trail update that has a location
+	// Use latest trail update that has a location (all users, or Strava users with no sync yet)
 	const { data: update } = await supabase
 		.from("trail_updates")
 		.select("lat, lon, created_at")

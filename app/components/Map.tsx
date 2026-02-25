@@ -245,15 +245,7 @@ export default function MapView({ slug, updates }: MapProps) {
 		map.on("load", async () => {
 			map.addControl(new BasemapToggle(), "top-right");
 
-			try {
-				const trailRes = await fetch("/pct-trail.geojson");
-				const trailData = await trailRes.json();
-				const feature = trailData.features?.[0];
-				if (feature?.geometry?.coordinates) {
-					trailCoordsRef.current = feature.geometry.coordinates;
-				}
-			} catch {}
-
+			// Add all sources and layers immediately so the base trail renders right away
 			map.addSource("pct-trail", {
 				type: "geojson",
 				data: "/pct-trail.geojson",
@@ -264,7 +256,7 @@ export default function MapView({ slug, updates }: MapProps) {
 				type: "line",
 				source: "pct-trail",
 				paint: {
-					"line-color": "rgba(255,255,255,0.15)",
+					"line-color": "rgba(255,255,255,0.45)",
 					"line-width": 2,
 					"line-opacity": 1,
 				},
@@ -310,7 +302,7 @@ export default function MapView({ slug, updates }: MapProps) {
 				paint: {
 					"line-color": "#ff6b6b",
 					"line-width": 10,
-					"line-opacity": 0.2,
+					"line-opacity": 0.3,
 					"line-blur": 5,
 				},
 			});
@@ -321,11 +313,36 @@ export default function MapView({ slug, updates }: MapProps) {
 				paint: {
 					"line-color": "#ff6b6b",
 					"line-width": 3,
-					"line-opacity": 0.7,
+					"line-opacity": 0.92,
 				},
 			});
 
-			updateMarker();
+			// Fetch trail coords and current position in parallel
+			const [coordsResult, posResult] = await Promise.allSettled([
+				fetch("/pct-trail.geojson")
+					.then((r) => r.json())
+					.then((d) => d.features?.[0]?.geometry?.coordinates as [number, number][]),
+				fetch(`/api/latest/${slug}`, { cache: "no-store" }).then((r) => r.json()),
+			]);
+
+			if (coordsResult.status === "fulfilled" && coordsResult.value) {
+				trailCoordsRef.current = coordsResult.value;
+			}
+
+			if (posResult.status === "fulfilled") {
+				const pos = posResult.value;
+				if (pos.lat || pos.lon) {
+					const lngLat: [number, number] = [pos.lon, pos.lat];
+					markerRef.current = new maplibregl.Marker({ element: createBlinkMarkerEl() })
+						.setLngLat(lngLat)
+						.addTo(map);
+					if (trailCoordsRef.current) {
+						const splitIdx = findNearestIndex(trailCoordsRef.current, pos.lon, pos.lat);
+						splitTrail(splitIdx, pos.direction || "NOBO");
+					}
+				}
+			}
+
 			const interval = setInterval(updateMarker, 60_000);
 			map.on("remove", () => clearInterval(interval));
 		});

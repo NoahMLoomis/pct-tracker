@@ -71,8 +71,8 @@ export async function fetchActivities(
 	before?: number,
 ): Promise<StravaActivity[]> {
 	const all: StravaActivity[] = [];
-	for (let page = 1; page <= 5; page++) {
-		const params = new URLSearchParams({ per_page: "50", page: String(page) });
+	for (let page = 1; page <= 10; page++) {
+		const params = new URLSearchParams({ per_page: "100", page: String(page) });
 		if (after != null) params.set("after", String(after));
 		if (before != null) params.set("before", String(before));
 		const res = await fetch(

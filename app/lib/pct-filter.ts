@@ -1,5 +1,8 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 const R = 6_371_000;
-const PCT_PROXIMITY_M = 15_000;
+const PCT_PROXIMITY_M = 30_000;
 
 function haversineM(
 	lat1: number,
@@ -100,4 +103,96 @@ export function isNearPct(lat: number, lon: number): boolean {
 		}
 	}
 	return false;
+}
+
+// Full trail coordinates cached at module level — [lon, lat] GeoJSON order
+let _trailCoords: [number, number][] | null = null;
+
+function getTrailCoords(): [number, number][] {
+	if (_trailCoords) return _trailCoords;
+	try {
+		const raw = readFileSync(join(process.cwd(), "public/pct-trail.geojson"), "utf8");
+		const geojson = JSON.parse(raw);
+		_trailCoords = geojson.features[0].geometry.coordinates as [number, number][];
+	} catch {
+		// Fallback to simplified waypoints if file unavailable
+		_trailCoords = W.map(([lat, lon]) => [lon, lat] as [number, number]);
+	}
+	return _trailCoords!;
+}
+
+// Snap a coordinate to the nearest point on the full PCT trail.
+export function snapToTrail(lat: number, lon: number): { lat: number; lon: number } {
+	const coords = getTrailCoords();
+	let minDist = Infinity;
+	let nearestLat = coords[0][1];
+	let nearestLon = coords[0][0];
+
+	for (const [clon, clat] of coords) {
+		const dist = haversineM(lat, lon, clat, clon);
+		if (dist < minDist) {
+			minDist = dist;
+			nearestLat = clat;
+			nearestLon = clon;
+		}
+	}
+
+	return { lat: nearestLat, lon: nearestLon };
+}
+
+// Returns metres hiked along the simplified PCT trail from the start
+// (NOBO: from Campo; SOBO: from Manning Park) to the given snapped position.
+export function distAlongTrailM(
+	snapLat: number,
+	snapLon: number,
+	direction: "NOBO" | "SOBO",
+): number {
+	// Build cumulative distances from W[0]
+	const cumDists: number[] = [0];
+	for (let i = 0; i < W.length - 1; i++) {
+		cumDists.push(
+			cumDists[i] + haversineM(W[i][0], W[i][1], W[i + 1][0], W[i + 1][1]),
+		);
+	}
+	const totalLen = cumDists[W.length - 1];
+
+	// Find which segment the snap point is closest to
+	let minDist = Infinity;
+	let bestI = 0;
+	let bestT = 0;
+	for (let i = 0; i < W.length - 1; i++) {
+		const lat1 = W[i][0];
+		const lon1 = W[i][1];
+		const lat2 = W[i + 1][0];
+		const lon2 = W[i + 1][1];
+		const midLat = ((lat1 + lat2) / 2) * (Math.PI / 180);
+		const cosLat = Math.cos(midLat);
+		const dx = (lon2 - lon1) * cosLat;
+		const dy = lat2 - lat1;
+		const segLenSq = dx * dx + dy * dy;
+		let t = 0;
+		if (segLenSq > 0) {
+			const px = (snapLon - lon1) * cosLat;
+			const py = snapLat - lat1;
+			t = Math.max(0, Math.min(1, (px * dx + py * dy) / segLenSq));
+		}
+		const pLat = lat1 + t * (lat2 - lat1);
+		const pLon = lon1 + t * (lon2 - lon1);
+		const dist = haversineM(snapLat, snapLon, pLat, pLon);
+		if (dist < minDist) {
+			minDist = dist;
+			bestI = i;
+			bestT = t;
+		}
+	}
+
+	const segLen = haversineM(
+		W[bestI][0],
+		W[bestI][1],
+		W[bestI + 1][0],
+		W[bestI + 1][1],
+	);
+	const distFromStart = cumDists[bestI] + bestT * segLen;
+
+	return direction === "NOBO" ? distFromStart : totalLen - distFromStart;
 }
