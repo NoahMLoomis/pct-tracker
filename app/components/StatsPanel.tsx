@@ -108,7 +108,7 @@ export default function StatsPanel({ stats }: StatsPanelProps) {
 
 					<div className="bg-chip border border-chip-border rounded-2xl p-3">
 						<div className="text-xs text-stat-label mb-1.5 flex items-center gap-2">
-							{isPosition ? "Days on Trail" : "Total Time"}
+							Total Active Time
 						</div>
 						<div className="text-base font-black text-stat-value leading-none">
 							{isPosition

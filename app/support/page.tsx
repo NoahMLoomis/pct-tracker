@@ -42,8 +42,7 @@ export default function SupportPage() {
 					<div className="bg-card-light border border-line rounded-2xl p-[18px] mb-4">
 						<h2 className="text-lg font-bold mb-2">Report an Issue</h2>
 						<p className="text-[rgba(232,238,245,0.8)] leading-[1.7] text-sm mb-4">
-							Found a bug or something not working as expected? Open an issue on
-							GitHub and we&apos;ll look into it.
+							Found a bug or something not working as expected?
 						</p>
 						<a
 							href="https://github.com/NoahMLoomis/pct-tracker/issues"
@@ -59,7 +58,6 @@ export default function SupportPage() {
 						<h2 className="text-lg font-bold mb-2">Request a Feature</h2>
 						<p className="text-[rgba(232,238,245,0.8)] leading-[1.7] text-sm mb-4">
 							Have an idea for something that would make PCT Tracker better?
-							Submit a feature request on GitHub.
 						</p>
 						<a
 							href="https://github.com/NoahMLoomis/pct-tracker/issues/"
