@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { getSession } from "@/lib/session";
 import { createServiceClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
+import { withLogging } from "@/lib/with-logging";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -61,7 +63,7 @@ async function notifySubscribers(
 	);
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withLogging(async (request: NextRequest) => {
 	const session = await getSession();
 	if (!session) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -103,7 +105,12 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Await before responding — fire-and-forget is killed early on Vercel serverless
-		await notifySubscribers(supabase, userId, data).catch(console.error);
+		await notifySubscribers(supabase, userId, data).catch((err) =>
+			logger.error("notify subscribers failed", {
+				userId,
+				error: err instanceof Error ? err.message : String(err),
+			}),
+		);
 
 		return NextResponse.json(data);
 	}
@@ -196,4 +203,4 @@ export async function POST(request: NextRequest) {
 	}
 
 	return NextResponse.json({ error: "Invalid action" }, { status: 400 });
-}
+});

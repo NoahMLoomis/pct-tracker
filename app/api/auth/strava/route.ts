@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withLogging } from "@/lib/with-logging";
 
-export async function GET() {
+export const GET = withLogging(async (_req: NextRequest) => {
 	const params = new URLSearchParams({
 		client_id: process.env.STRAVA_CLIENT_ID!,
 		response_type: "code",
@@ -12,4 +13,4 @@ export async function GET() {
 	return NextResponse.redirect(
 		`https://www.strava.com/oauth/authorize?${params.toString()}`,
 	);
-}
+});

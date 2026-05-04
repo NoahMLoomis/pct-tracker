@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { createServiceClient } from "@/lib/supabase/server";
+import { withLogging } from "@/lib/with-logging";
 
-export async function POST(request: NextRequest) {
+export const POST = withLogging(async (request: NextRequest) => {
 	const body = await request.json();
 	const { token, newPassword } = body;
 
@@ -65,4 +66,4 @@ export async function POST(request: NextRequest) {
 	]);
 
 	return NextResponse.json({ ok: true });
-}
+});

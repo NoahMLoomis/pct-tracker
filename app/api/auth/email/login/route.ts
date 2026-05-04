@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createSession, sessionCookieOptions } from "@/lib/session";
+import { withLogging } from "@/lib/with-logging";
 
-export async function POST(request: NextRequest) {
+export const POST = withLogging(async (request: NextRequest) => {
 	const body = await request.json();
 	const { email, password } = body;
 
@@ -41,4 +42,4 @@ export async function POST(request: NextRequest) {
 	const response = NextResponse.json({ ok: true });
 	response.cookies.set(sessionCookieOptions(token));
 	return response;
-}
+});

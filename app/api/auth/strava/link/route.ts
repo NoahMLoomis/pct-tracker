@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SignJWT } from "jose";
 import { getSession } from "@/lib/session";
+import { withLogging } from "@/lib/with-logging";
 
 const SECRET = new TextEncoder().encode(
 	process.env.SESSION_SECRET || "dev-secret-change-me",
 );
 
-export async function GET(request: NextRequest) {
+export const GET = withLogging(async (request: NextRequest) => {
 	const session = await getSession();
 	if (!session) {
 		return NextResponse.redirect(new URL("/login", request.nextUrl.origin));
@@ -32,4 +33,4 @@ export async function GET(request: NextRequest) {
 	return NextResponse.redirect(
 		`https://www.strava.com/oauth/authorize?${params.toString()}`,
 	);
-}
+});

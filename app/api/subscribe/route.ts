@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { createServiceClient } from "@/lib/supabase/server";
+import { withLogging } from "@/lib/with-logging";
 
-export async function POST(request: NextRequest) {
+export const POST = withLogging(async (request: NextRequest) => {
 	const body = await request.json();
 	const { slug, email } = body;
 
@@ -51,9 +52,9 @@ export async function POST(request: NextRequest) {
 	}
 
 	return NextResponse.json({ ok: true });
-}
+});
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = withLogging(async (request: NextRequest) => {
 	const token = request.nextUrl.searchParams.get("token");
 
 	if (!token) {
@@ -75,4 +76,4 @@ export async function DELETE(request: NextRequest) {
 	}
 
 	return NextResponse.json({ ok: true });
-}
+});

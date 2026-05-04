@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createSession, sessionCookieOptions } from "@/lib/session";
+import { withLogging } from "@/lib/with-logging";
 
 function slugify(name: string): string {
 	return name
@@ -10,7 +11,7 @@ function slugify(name: string): string {
 		.replace(/^-|-$/g, "");
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withLogging(async (request: NextRequest) => {
 	const body = await request.json();
 	const { email, password, displayName } = body;
 
@@ -99,4 +100,4 @@ export async function POST(request: NextRequest) {
 	const response = NextResponse.json({ ok: true });
 	response.cookies.set(sessionCookieOptions(token));
 	return response;
-}
+});

@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHash, randomBytes } from "node:crypto";
 import { Resend } from "resend";
 import { createServiceClient } from "@/lib/supabase/server";
+import { withLogging } from "@/lib/with-logging";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function POST(request: NextRequest) {
+export const POST = withLogging(async (request: NextRequest) => {
 	const body = await request.json();
 	const { email } = body;
 
@@ -60,4 +61,4 @@ export async function POST(request: NextRequest) {
 	});
 
 	return ok;
-}
+});

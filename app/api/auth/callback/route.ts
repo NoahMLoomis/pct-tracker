@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createSession, sessionCookieOptions } from "@/lib/session";
+import { logger } from "@/lib/logger";
+import { withLogging } from "@/lib/with-logging";
 
 const SECRET = new TextEncoder().encode(
 	process.env.SESSION_SECRET || "dev-secret-change-me",
@@ -14,7 +16,7 @@ function slugify(name: string): string {
 		.replace(/^-|-$/g, "");
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withLogging(async (request: NextRequest) => {
 	const code = request.nextUrl.searchParams.get("code");
 	const stateParam = request.nextUrl.searchParams.get("state");
 
@@ -150,7 +152,7 @@ export async function GET(request: NextRequest) {
 			.single();
 
 		if (error || !newUser) {
-			console.log(error);
+			logger.error("strava user creation failed", { error: error?.message });
 			return NextResponse.json(
 				{ error: "Failed to create user" },
 				{ status: 500 },
@@ -168,4 +170,4 @@ export async function GET(request: NextRequest) {
 	response.cookies.set(sessionCookieOptions(token));
 
 	return response;
-}
+});

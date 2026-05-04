@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { createServiceClient } from "@/lib/supabase/server";
+import { withLogging } from "@/lib/with-logging";
 
-export async function POST(request: NextRequest) {
+export const POST = withLogging(async (request: NextRequest) => {
 	const session = await getSession();
 	if (!session) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -72,4 +73,4 @@ export async function POST(request: NextRequest) {
 	}
 
 	return NextResponse.json({ ok: true });
-}
+});

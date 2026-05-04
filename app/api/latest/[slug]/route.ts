@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { snapToTrail } from "@/lib/pct-filter";
+import { withLogging } from "@/lib/with-logging";
 
-export async function GET(
+export const GET = withLogging(async (
 	_request: NextRequest,
 	{ params }: { params: Promise<{ slug: string }> },
-) {
+) => {
 	const { slug } = await params;
 	const supabase = createServiceClient();
 
@@ -63,4 +64,4 @@ export async function GET(
 		{ lat: snapped.lat, lon: snapped.lon, ts: update.created_at, direction },
 		{ headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } },
 	);
-}
+});
