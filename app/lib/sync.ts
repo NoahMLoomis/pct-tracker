@@ -1,17 +1,24 @@
 import { createServiceClient } from "./supabase/server";
 import { refreshAccessToken, fetchActivities } from "./strava";
 import { isNearPct } from "./pct-filter";
+import { logger } from "./logger";
 
 export async function syncUser(
 	userId: string,
 ): Promise<{ added: number; skipped: number }> {
 	const supabase = createServiceClient();
 
-	await supabase.from("sync_state").upsert({
+	logger.info("sync start", { userId });
+
+	const { error: syncStartErr } = await supabase.from("sync_state").upsert({
 		user_id: userId,
 		status: "syncing",
 		last_sync_at: new Date().toISOString(),
+		error_message: null,
 	});
+	if (syncStartErr) {
+		logger.error("sync_state upsert failed", { userId, error: syncStartErr.message });
+	}
 
 	try {
 		const { data: user } = await supabase
@@ -54,6 +61,7 @@ export async function syncUser(
 		const accessToken = await refreshAccessToken(userId);
 		const activities = await fetchActivities(accessToken, after, before);
 		activities.sort((a, b) => a.start_date.localeCompare(b.start_date));
+		logger.info("sync fetched activities", { userId, count: activities.length });
 
 		const { data: existing } = await supabase
 			.from("activity_stats")
@@ -122,13 +130,20 @@ export async function syncUser(
 			last_sync_at: new Date().toISOString(),
 		});
 
+		logger.info("sync complete", { userId, added, skipped });
 		return { added, skipped };
 	} catch (err) {
-		await supabase.from("sync_state").upsert({
+		const errorMessage = err instanceof Error ? err.message : String(err);
+		logger.error("sync failed", { userId, error: errorMessage });
+		const { error: syncErrUpsertErr } = await supabase.from("sync_state").upsert({
 			user_id: userId,
 			status: "error",
 			last_sync_at: new Date().toISOString(),
+			error_message: errorMessage,
 		});
+		if (syncErrUpsertErr) {
+			logger.error("sync_state error upsert failed", { userId, error: syncErrUpsertErr.message });
+		}
 		throw err;
 	}
 }
