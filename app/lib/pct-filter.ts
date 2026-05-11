@@ -131,77 +131,69 @@ function getTrailCoords(): [number, number][] {
 export function snapToTrail(
 	lat: number,
 	lon: number,
-): { lat: number; lon: number } {
+): { lat: number; lon: number; index: number } {
 	const coords = getTrailCoords();
 	let minDist = Infinity;
-	let nearestLat = coords[0][1];
-	let nearestLon = coords[0][0];
+	let nearestIdx = 0;
 
-	for (const [clon, clat] of coords) {
-		const dist = haversineM(lat, lon, clat, clon);
+	for (let i = 0; i < coords.length; i++) {
+		const dist = haversineM(lat, lon, coords[i][1], coords[i][0]);
 		if (dist < minDist) {
 			minDist = dist;
-			nearestLat = clat;
-			nearestLon = clon;
+			nearestIdx = i;
 		}
 	}
 
-	return { lat: nearestLat, lon: nearestLon };
+	return { lat: coords[nearestIdx][1], lon: coords[nearestIdx][0], index: nearestIdx };
 }
 
-// Returns metres hiked along the simplified PCT trail from the start
+// Cached cumulative distances along the full trail (metres from index 0).
+let _cumDists: Float64Array | null = null;
+
+function getCumDists(): Float64Array {
+	if (_cumDists) return _cumDists;
+	const coords = getTrailCoords();
+	const cum = new Float64Array(coords.length);
+	cum[0] = 0;
+	for (let i = 0; i < coords.length - 1; i++) {
+		cum[i + 1] =
+			cum[i] +
+			haversineM(coords[i][1], coords[i][0], coords[i + 1][1], coords[i + 1][0]);
+	}
+	_cumDists = cum;
+	return _cumDists;
+}
+
+// Returns metres hiked along the full PCT trail from the start
 // (NOBO: from Campo; SOBO: from Manning Park) to the given snapped position.
+// Pass trailIndex from snapToTrail() to skip the redundant nearest-point scan.
 export function distAlongTrailM(
 	snapLat: number,
 	snapLon: number,
 	direction: "NOBO" | "SOBO",
+	trailIndex?: number,
 ): number {
-	// Build cumulative distances from W[0]
-	const cumDists: number[] = [0];
-	for (let i = 0; i < W.length - 1; i++) {
-		cumDists.push(
-			cumDists[i] + haversineM(W[i][0], W[i][1], W[i + 1][0], W[i + 1][1]),
-		);
-	}
-	const totalLen = cumDists[W.length - 1];
+	const coords = getTrailCoords();
+	const cumDists = getCumDists();
+	const totalLen = cumDists[coords.length - 1];
 
-	// Find which segment the snap point is closest to
-	let minDist = Infinity;
-	let bestI = 0;
-	let bestT = 0;
-	for (let i = 0; i < W.length - 1; i++) {
-		const lat1 = W[i][0];
-		const lon1 = W[i][1];
-		const lat2 = W[i + 1][0];
-		const lon2 = W[i + 1][1];
-		const midLat = ((lat1 + lat2) / 2) * (Math.PI / 180);
-		const cosLat = Math.cos(midLat);
-		const dx = (lon2 - lon1) * cosLat;
-		const dy = lat2 - lat1;
-		const segLenSq = dx * dx + dy * dy;
-		let t = 0;
-		if (segLenSq > 0) {
-			const px = (snapLon - lon1) * cosLat;
-			const py = snapLat - lat1;
-			t = Math.max(0, Math.min(1, (px * dx + py * dy) / segLenSq));
-		}
-		const pLat = lat1 + t * (lat2 - lat1);
-		const pLon = lon1 + t * (lon2 - lon1);
-		const dist = haversineM(snapLat, snapLon, pLat, pLon);
-		if (dist < minDist) {
-			minDist = dist;
-			bestI = i;
-			bestT = t;
+	let nearestIdx: number;
+	if (trailIndex !== undefined) {
+		nearestIdx = trailIndex;
+	} else {
+		// Fallback: scan the full trail to find the nearest point
+		let minDist = Infinity;
+		nearestIdx = 0;
+		for (let i = 0; i < coords.length; i++) {
+			const dist = haversineM(snapLat, snapLon, coords[i][1], coords[i][0]);
+			if (dist < minDist) {
+				minDist = dist;
+				nearestIdx = i;
+			}
 		}
 	}
 
-	const segLen = haversineM(
-		W[bestI][0],
-		W[bestI][1],
-		W[bestI + 1][0],
-		W[bestI + 1][1],
-	);
-	const distFromStart = cumDists[bestI] + bestT * segLen;
+	const distFromStart = cumDists[nearestIdx];
 
 	return direction === "NOBO" ? distFromStart : totalLen - distFromStart;
 }

@@ -106,7 +106,7 @@ export const GET = withLogging(async (
 
 	const direction = (user.direction as "NOBO" | "SOBO") || "NOBO";
 	const snapped = snapToTrail(update.lat as number, update.lon as number);
-	const totalDistanceM = distAlongTrailM(snapped.lat, snapped.lon, direction);
+	const totalDistanceM = distAlongTrailM(snapped.lat, snapped.lon, direction, snapped.index);
 
 	return NextResponse.json(
 		{
