@@ -128,9 +128,9 @@ export const POST = withLogging(async (request: NextRequest) => {
 				{ status: 400 },
 			);
 		}
-		if (body.body.trim().length > 300) {
+		if (body.body.trim().length > 500) {
 			return NextResponse.json(
-				{ error: "Body must be 300 characters or less" },
+				{ error: "Body must be 500 characters or less" },
 				{ status: 400 },
 			);
 		}
