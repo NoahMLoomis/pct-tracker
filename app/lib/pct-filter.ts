@@ -164,6 +164,68 @@ function getCumDists(): Float64Array {
 	return _cumDists;
 }
 
+// Calibration table: [GeoJSON cumulative miles, official PCT miles].
+// Only landmarks that snap within ~3km of the GeoJSON trail are included.
+// Sources: Halfmile PCT maps, PCTA mile markers.
+const MI = 1609.34;
+const CALIBRATION: [number, number][] = [
+	[0.0, 0],
+	[17.8, 20],
+	[38.7, 43],
+	[100.1, 109.5],
+	[134.5, 151.8],
+	[254.1, 266.3],
+	[282.6, 291],
+	[310.1, 342],
+	[332.7, 369.5],
+	[415.4, 454.5],
+	[654.4, 702],
+	[696.6, 745],
+	[731.5, 789],
+	[797.2, 854],
+	[876.3, 942],
+	[946.1, 1017],
+	[1016.1, 1092],
+	[1072.9, 1153],
+	[1116.1, 1195],
+	[1193.3, 1284],
+	[1325.8, 1419],
+	[1407.3, 1501],
+	[1555.1, 1655],
+	[1604.5, 1718.9],
+	[1710.5, 1823],
+	[1765.2, 1906],
+	[1881.8, 1993],
+	[1975.0, 2095],
+	[2021.5, 2147],
+	[2161.6, 2292],
+	[2250.2, 2393],
+	[2318.9, 2464],
+	[2464.4, 2620],
+	[2492.5, 2652],
+];
+
+// Piecewise linear interpolation from GeoJSON miles to official PCT miles.
+function calibrateToOfficialMi(geojsonMi: number): number {
+	if (geojsonMi <= CALIBRATION[0][0]) return CALIBRATION[0][1];
+	if (geojsonMi >= CALIBRATION[CALIBRATION.length - 1][0])
+		return CALIBRATION[CALIBRATION.length - 1][1];
+
+	// Binary search for the enclosing segment
+	let lo = 0;
+	let hi = CALIBRATION.length - 1;
+	while (lo < hi - 1) {
+		const mid = (lo + hi) >> 1;
+		if (CALIBRATION[mid][0] <= geojsonMi) lo = mid;
+		else hi = mid;
+	}
+
+	const [geoLo, offLo] = CALIBRATION[lo];
+	const [geoHi, offHi] = CALIBRATION[hi];
+	const t = (geojsonMi - geoLo) / (geoHi - geoLo);
+	return offLo + t * (offHi - offLo);
+}
+
 // Returns metres hiked along the full PCT trail from the start
 // (NOBO: from Campo; SOBO: from Manning Park) to the given snapped position.
 // Pass trailIndex from snapToTrail() to skip the redundant nearest-point scan.
@@ -175,13 +237,11 @@ export function distAlongTrailM(
 ): number {
 	const coords = getTrailCoords();
 	const cumDists = getCumDists();
-	const totalLen = cumDists[coords.length - 1];
 
 	let nearestIdx: number;
 	if (trailIndex !== undefined) {
 		nearestIdx = trailIndex;
 	} else {
-		// Fallback: scan the full trail to find the nearest point
 		let minDist = Infinity;
 		nearestIdx = 0;
 		for (let i = 0; i < coords.length; i++) {
@@ -193,7 +253,11 @@ export function distAlongTrailM(
 		}
 	}
 
-	const distFromStart = cumDists[nearestIdx];
+	const rawMi = cumDists[nearestIdx] / MI;
+	const officialMi = calibrateToOfficialMi(rawMi);
+	const officialM = officialMi * MI;
 
-	return direction === "NOBO" ? distFromStart : totalLen - distFromStart;
+	if (direction === "NOBO") return officialM;
+	const totalOfficialM = CALIBRATION[CALIBRATION.length - 1][1] * MI;
+	return totalOfficialM - officialM;
 }
