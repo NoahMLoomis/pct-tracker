@@ -10,13 +10,31 @@ export const GET = withLogging(async (request: NextRequest) => {
 	}
 
 	const supabase = createServiceClient();
-	const { data: users } = await supabase.from("users").select("id");
 
-	if (!users?.length) {
+	// Only sync users that have a Strava connection
+	const { data: stravaUsers } = await supabase
+		.from("users")
+		.select("id")
+		.not("strava_athlete_id", "is", null);
+
+	if (!stravaUsers?.length) {
 		return NextResponse.json({ synced: 0 });
 	}
 
-	const results: { userId: string; added?: number; error?: string }[] = [];
+	// Skip users whose last sync ended in error (token revoked / expired)
+	const { data: errorStates } = await supabase
+		.from("sync_state")
+		.select("user_id")
+		.eq("status", "error");
+
+	const errorUserIds = new Set((errorStates || []).map((s) => s.user_id));
+	const users = stravaUsers.filter((u) => !errorUserIds.has(u.id));
+
+	const results: { userId: string; added?: number; error?: string; skippedReason?: string }[] = [];
+
+	for (const id of errorUserIds) {
+		results.push({ userId: id, skippedReason: "sync_state is error" });
+	}
 
 	for (const user of users) {
 		try {

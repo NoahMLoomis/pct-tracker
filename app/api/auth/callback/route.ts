@@ -121,6 +121,14 @@ export const GET = withLogging(async (request: NextRequest) => {
 			})
 			.eq("id", existingUser.id);
 
+		// Reset sync_state so the cron picks this user up again
+		await supabase
+			.from("sync_state")
+			.upsert(
+				{ user_id: existingUser.id, status: "idle", error_message: null },
+				{ onConflict: "user_id" },
+			);
+
 		userId = existingUser.id;
 	} else {
 		let slug = baseSlug;
