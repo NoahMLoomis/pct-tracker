@@ -19,7 +19,7 @@ export default function LandingPage() {
 							href="/support"
 							className="no-underline text-muted px-2.5 py-2 rounded-full border border-line bg-[rgba(17,22,28,0.35)]"
 						>
-							Support
+						  Contact	
 						</Link>
 						<Link
 							href="/login"
