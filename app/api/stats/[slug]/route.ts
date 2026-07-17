@@ -12,7 +12,7 @@ export const GET = withLogging(async (
 
 	const { data: user } = await supabase
 		.from("users")
-		.select("id, strava_athlete_id, direction, hike_start_date")
+		.select("id, strava_athlete_id, direction, hike_start_date, hike_end_date")
 		.eq("slug", slug)
 		.single();
 
@@ -73,13 +73,26 @@ export const GET = withLogging(async (
 		.limit(1)
 		.single();
 
+	const { data: latestUpdate } = await supabase
+		.from("trail_updates")
+		.select("created_at")
+		.eq("user_id", user.id)
+		.order("created_at", { ascending: false })
+		.limit(1)
+		.single();
+
 	const today = new Date().toISOString().slice(0, 10);
 	const startDate = user.hike_start_date;
+	const inactivityCap = latestUpdate?.created_at
+		? latestUpdate.created_at.slice(0, 10)
+		: startDate;
+	const activeThrough = user.hike_end_date ?? inactivityCap;
+	const endDate = activeThrough && activeThrough < today ? activeThrough : today;
 	const daysOnTrail = startDate
 		? Math.max(
 				1,
 				Math.floor(
-					(new Date(today).getTime() - new Date(startDate).getTime()) /
+					(new Date(endDate).getTime() - new Date(startDate).getTime()) /
 						86400000,
 				),
 			)
