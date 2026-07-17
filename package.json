@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "biome format --write ./app"
+    "lint": "biome format --write ./app",
+    "generate:pct-miles": "node scripts/generate-pct-miles.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",

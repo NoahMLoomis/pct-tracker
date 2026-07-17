@@ -86,6 +86,55 @@ export default function LocationPicker({
 					"line-opacity": 0.75,
 				},
 			});
+
+			map.addSource("pct-miles", {
+				type: "geojson",
+				data: "/pct-miles.geojson",
+			});
+
+			map.addLayer({
+				id: "pct-miles-dots",
+				type: "circle",
+				source: "pct-miles",
+				minzoom: 7,
+				paint: {
+					"circle-radius": ["interpolate", ["linear"], ["zoom"], 7, 2, 12, 4],
+					"circle-color": "#7ee787",
+					"circle-stroke-color": "#000",
+					"circle-stroke-width": 1,
+				},
+			});
+
+			map.addLayer({
+				id: "pct-miles-labels",
+				type: "symbol",
+				source: "pct-miles",
+				minzoom: 8,
+				layout: {
+					"text-field": ["to-string", ["get", "mile"]],
+					"text-size": ["interpolate", ["linear"], ["zoom"], 8, 10, 14, 14],
+					"text-offset": [0, -1.1],
+					"text-anchor": "bottom",
+					"text-allow-overlap": false,
+					"symbol-sort-key": [
+						"case",
+						["==", ["%", ["get", "mile"], 100], 0],
+						0,
+						["==", ["%", ["get", "mile"], 50], 0],
+						1,
+						["==", ["%", ["get", "mile"], 25], 0],
+						2,
+						["==", ["%", ["get", "mile"], 10], 0],
+						3,
+						4,
+					],
+				},
+				paint: {
+					"text-color": "#7ee787",
+					"text-halo-color": "#000",
+					"text-halo-width": 1.5,
+				},
+			});
 		});
 
 		if (lat != null && lon != null) {
