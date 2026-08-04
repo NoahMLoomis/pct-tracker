@@ -39,11 +39,12 @@ async function notifySubscribers(
 		day: "numeric",
 	});
 
-	await Promise.allSettled(
+	const updateUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/tracker/${user.slug}/updates`;
+
+	await resend.batch.send(
 		subs.map((sub) => {
-			const updateUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/tracker/${user.slug}/updates`;
 			const unsubscribeUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/unsubscribe?token=${sub.unsubscribe_token}`;
-			return resend.emails.send({
+			return {
 				from: process.env.RESEND_FROM_EMAIL!,
 				to: sub.email,
 				subject: `New update for ${user.display_name}'s PCT journey`,
@@ -58,7 +59,7 @@ async function notifySubscribers(
 						<a href="${unsubscribeUrl}">Unsubscribe</a>
 					</p>
 				`,
-			});
+			};
 		}),
 	);
 }

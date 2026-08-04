@@ -35,27 +35,35 @@ export default function TrackerHeader({
 					</Link>
 				</div>
 
-				<nav className="flex gap-2 shrink-0">
-					{tabs.map((t) => (
-						<Link
-							key={t.href}
-							href={t.href}
-							className={`no-underline text-muted px-2.5 py-2 rounded-full border border-line bg-[rgba(17,22,28,0.35)] ${pathname === t.href ? "!text-text !border-[rgba(126,231,135,0.35)] shadow-[inset_0_0_0_1px_rgba(126,231,135,0.25)]" : ""}`}
-						>
-							{t.label}
-						</Link>
-					))}
-					{lighterpackUrl && (
-						<a
-							href={`https://lighterpack.com/r/${lighterpackUrl}`}
-							target="_blank"
-							rel="noopener noreferrer"
-							className="no-underline text-muted px-2.5 py-2 rounded-full border border-line bg-[rgba(17,22,28,0.35)]"
-						>
-							Gear
-						</a>
-					)}
-				</nav>
+				<div className="flex items-center gap-4 shrink-0">
+					<nav className="flex gap-2">
+						{tabs.map((t) => (
+							<Link
+								key={t.href}
+								href={t.href}
+								className={`no-underline text-muted px-2.5 py-2 rounded-full border border-line bg-[rgba(17,22,28,0.35)] ${pathname === t.href ? "!text-text !border-[rgba(126,231,135,0.35)] shadow-[inset_0_0_0_1px_rgba(126,231,135,0.25)]" : ""}`}
+							>
+								{t.label}
+							</Link>
+						))}
+						{lighterpackUrl && (
+							<a
+								href={`https://lighterpack.com/r/${lighterpackUrl}`}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="no-underline text-muted px-2.5 py-2 rounded-full border border-line bg-[rgba(17,22,28,0.35)]"
+							>
+								Gear
+							</a>
+						)}
+					</nav>
+					<a
+						href="mailto:noah.loomis@me.com"
+						className="no-underline text-sm text-[rgba(232,238,245,0.4)] hover:text-[rgba(232,238,245,0.65)] transition-colors"
+					>
+						Report a bug
+					</a>
+				</div>
 			</div>
 		</header>
 	);
