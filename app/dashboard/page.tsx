@@ -51,9 +51,28 @@ export default async function DashboardPage() {
 			}
 		: null;
 
+	const showBanner = new Date() < new Date("2026-08-13");
+
 	return (
 		<main className="max-w-[980px] mx-auto px-4 pt-8">
-			<h1 className="text-2xl font-black mb-5">Dashboard</h1>
+			{showBanner && (
+				<div className="max-w-[600px] mb-5 px-4 py-3 rounded-xl bg-[rgba(126,231,135,0.12)] border border-[rgba(126,231,135,0.3)] text-sm leading-relaxed">
+					Someone messaged me on reddit to tell me the Strava integration has been broken! Strava updated their API and the solution I had wasn&apos;t working. It should be fixed now. <br/><br/>If it still isn&apos;t working, or if there&apos;s any other bugs,{" "}
+					<a href="mailto:noah.loomis@me.com" className="text-[rgba(126,231,135,0.9)] hover:text-[rgba(126,231,135,1)] transition-colors">
+						let me know!
+					</a>
+          <br/><br/>This banner will be removed on 2026-08-13, but you can always report a bug using the "Report a bug" link<br/><br/>Happy Hiking<br/>- Coach
+				</div>
+			)}
+			<div className="flex items-center justify-between mb-5 max-w-[600px]">
+				<h1 className="text-2xl font-black">Dashboard</h1>
+				<a
+					href="mailto:noah.loomis@me.com"
+					className="no-underline text-sm text-[rgba(232,238,245,0.4)] hover:text-[rgba(232,238,245,0.65)] transition-colors"
+				>
+					Report a bug
+				</a>
+			</div>
 			<DashboardClient
 				user={user}
 				syncState={formattedSyncState}
