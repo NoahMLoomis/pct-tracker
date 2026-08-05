@@ -21,6 +21,8 @@ export async function syncUser(
 			userId,
 			error: syncStartErr.message,
 		});
+	} else {
+		logger.info("sync_state upsert succeeded", { userId, status: "syncing" });
 	}
 
 	try {
@@ -150,11 +152,19 @@ export async function syncUser(
 			);
 		}
 
-		await supabase.from("sync_state").upsert({
+		const { error: syncDoneErr } = await supabase.from("sync_state").upsert({
 			user_id: userId,
 			status: "idle",
 			last_sync_at: new Date().toISOString(),
 		});
+		if (syncDoneErr) {
+			logger.error("sync_state upsert failed", {
+				userId,
+				error: syncDoneErr.message,
+			});
+		} else {
+			logger.info("sync_state upsert succeeded", { userId, status: "idle" });
+		}
 
 		logger.info("sync complete", { userId, added, skipped });
 		return { added, skipped };
@@ -174,6 +184,8 @@ export async function syncUser(
 				userId,
 				error: syncErrUpsertErr.message,
 			});
+		} else {
+			logger.info("sync_state upsert succeeded", { userId, status: "error" });
 		}
 		throw err;
 	}

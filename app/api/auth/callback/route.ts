@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-import { createServiceClient } from "@/lib/supabase/server";
-import { createSession, sessionCookieOptions } from "@/lib/session";
+import { type NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
+import { createSession, sessionCookieOptions } from "@/lib/session";
+import { createServiceClient } from "@/lib/supabase/server";
 import { withLogging } from "@/lib/with-logging";
 
 const SECRET = new TextEncoder().encode(
@@ -82,10 +82,15 @@ export const GET = withLogging(async (request: NextRequest) => {
 					})
 					.eq("id", state.userId);
 
-				// Ensure sync_state row exists
+				// Ensure sync_state row exists and clear any prior error, so a
+				// user stuck in "error" (e.g. revoked token) is picked up by the
+				// cron job again after relinking.
 				await supabase
 					.from("sync_state")
-					.upsert({ user_id: state.userId }, { onConflict: "user_id" });
+					.upsert(
+						{ user_id: state.userId, status: "idle", error_message: null },
+						{ onConflict: "user_id" },
+					);
 
 				return NextResponse.redirect(
 					new URL("/dashboard", request.nextUrl.origin),
