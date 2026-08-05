@@ -51,8 +51,12 @@ interface DayItem {
 function computeInsights(stats: TrailStats) {
 	const totalKm = stats.totalDistanceM * KM_PER_M;
 	const totalMi = stats.totalDistanceM * MI_PER_M;
-	const pctCompleted = (totalMi / PCT_TOTAL_MI) * 100;
-	const remainingMi = Math.max(0, PCT_TOTAL_MI - totalMi);
+	// Progress % always tracks the furthest point reached along the trail
+	// (same value driving the map's green line), not total miles walked.
+	const positionM = stats.positionM ?? stats.totalDistanceM;
+	const positionMi = positionM * MI_PER_M;
+	const pctCompleted = (positionMi / PCT_TOTAL_MI) * 100;
+	const remainingMi = Math.max(0, PCT_TOTAL_MI - positionMi);
 	const remainingKm = remainingMi * 1.609344;
 
 	const days = new Set<string>();

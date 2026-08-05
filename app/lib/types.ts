@@ -36,6 +36,7 @@ export interface TrailStats {
 	lastDate: string | null;
 	daysOnTrail: number | null;
 	statsSource: "strava" | "position";
+	positionM: number | null;
 	activities: {
 		start_date: string;
 		distance_m: number;

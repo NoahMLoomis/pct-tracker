@@ -144,120 +144,83 @@ export function snapToTrail(
 		}
 	}
 
-	return { lat: coords[nearestIdx][1], lon: coords[nearestIdx][0], index: nearestIdx };
+	return {
+		lat: coords[nearestIdx][1],
+		lon: coords[nearestIdx][0],
+		index: nearestIdx,
+	};
 }
 
-// Cached cumulative distances along the full trail (metres from index 0).
-let _cumDists: Float64Array | null = null;
-
-function getCumDists(): Float64Array {
-	if (_cumDists) return _cumDists;
-	const coords = getTrailCoords();
-	const cum = new Float64Array(coords.length);
-	cum[0] = 0;
-	for (let i = 0; i < coords.length - 1; i++) {
-		cum[i + 1] =
-			cum[i] +
-			haversineM(coords[i][1], coords[i][0], coords[i + 1][1], coords[i + 1][0]);
-	}
-	_cumDists = cum;
-	return _cumDists;
-}
-
-// Calibration table: [GeoJSON cumulative miles, official PCT miles].
-// Only landmarks that snap within ~3km of the GeoJSON trail are included.
-// Sources: Halfmile PCT maps, PCTA mile markers.
 const MI = 1609.34;
-const CALIBRATION: [number, number][] = [
-	[0.0, 0],
-	[17.8, 20],
-	[38.7, 43],
-	[100.1, 109.5],
-	[134.5, 151.8],
-	[254.1, 266.3],
-	[282.6, 291],
-	[310.1, 342],
-	[332.7, 369.5],
-	[415.4, 454.5],
-	[654.4, 702],
-	[696.6, 745],
-	[731.5, 789],
-	[797.2, 854],
-	[876.3, 942],
-	[946.1, 1017],
-	[1016.1, 1092],
-	[1072.9, 1153],
-	[1116.1, 1195],
-	[1193.3, 1284],
-	[1325.8, 1419],
-	[1407.3, 1501],
-	[1555.1, 1655],
-	[1604.5, 1718.9],
-	[1710.5, 1823],
-	[1765.2, 1906],
-	[1881.8, 1993],
-	[1975.0, 2095],
-	[2021.5, 2147],
-	[2161.6, 2292],
-	[2250.2, 2393],
-	[2318.9, 2464],
-	[2464.4, 2620],
-	[2492.5, 2652],
-];
 
-// Piecewise linear interpolation from GeoJSON miles to official PCT miles.
-function calibrateToOfficialMi(geojsonMi: number): number {
-	if (geojsonMi <= CALIBRATION[0][0]) return CALIBRATION[0][1];
-	if (geojsonMi >= CALIBRATION[CALIBRATION.length - 1][0])
-		return CALIBRATION[CALIBRATION.length - 1][1];
+// Official mile markers (every 5mi, south → north) generated from a
+// high-precision GPX measuring the real ~2650mi PCT length — the same file
+// the mile-marker LocationPicker shows users when they pick a spot. Using it
+// here too keeps "the mile you picked" and "the mile we compute" in sync;
+// pct-trail.geojson (used by snapToTrail for visual placement) is a coarser
+// digitization that runs ~6% short of the real trail length, so it can't be
+// used as the basis for official mileage.
+let _mileMarkers: { lon: number; lat: number; mile: number }[] | null = null;
 
-	// Binary search for the enclosing segment
-	let lo = 0;
-	let hi = CALIBRATION.length - 1;
-	while (lo < hi - 1) {
-		const mid = (lo + hi) >> 1;
-		if (CALIBRATION[mid][0] <= geojsonMi) lo = mid;
-		else hi = mid;
-	}
-
-	const [geoLo, offLo] = CALIBRATION[lo];
-	const [geoHi, offHi] = CALIBRATION[hi];
-	const t = (geojsonMi - geoLo) / (geoHi - geoLo);
-	return offLo + t * (offHi - offLo);
+function getMileMarkers(): { lon: number; lat: number; mile: number }[] {
+	if (_mileMarkers) return _mileMarkers;
+	const raw = readFileSync(
+		join(process.cwd(), "public/pct-miles.geojson"),
+		"utf8",
+	);
+	const geojson = JSON.parse(raw) as {
+		features: {
+			geometry: { coordinates: [number, number] };
+			properties: { mile: number };
+		}[];
+	};
+	_mileMarkers = geojson.features.map((f) => ({
+		lon: f.geometry.coordinates[0],
+		lat: f.geometry.coordinates[1],
+		mile: f.properties.mile,
+	}));
+	return _mileMarkers!;
 }
 
 // Returns metres hiked along the full PCT trail from the start
-// (NOBO: from Campo; SOBO: from Manning Park) to the given snapped position.
-// Pass trailIndex from snapToTrail() to skip the redundant nearest-point scan.
+// (NOBO: from Campo; SOBO: from Manning Park) to the given position, found
+// by projecting onto the nearest segment between two official mile markers
+// and interpolating the mile value along it.
 export function distAlongTrailM(
-	snapLat: number,
-	snapLon: number,
+	lat: number,
+	lon: number,
 	direction: "NOBO" | "SOBO",
-	trailIndex?: number,
 ): number {
-	const coords = getTrailCoords();
-	const cumDists = getCumDists();
+	const markers = getMileMarkers();
 
-	let nearestIdx: number;
-	if (trailIndex !== undefined) {
-		nearestIdx = trailIndex;
-	} else {
-		let minDist = Infinity;
-		nearestIdx = 0;
-		for (let i = 0; i < coords.length; i++) {
-			const dist = haversineM(snapLat, snapLon, coords[i][1], coords[i][0]);
-			if (dist < minDist) {
-				minDist = dist;
-				nearestIdx = i;
-			}
+	let bestDist = Infinity;
+	let bestMi = 0;
+	for (let i = 0; i < markers.length - 1; i++) {
+		const a = markers[i];
+		const b = markers[i + 1];
+		const midLat = ((a.lat + b.lat) / 2) * (Math.PI / 180);
+		const cosLat = Math.cos(midLat);
+		const dx = (b.lon - a.lon) * cosLat;
+		const dy = b.lat - a.lat;
+		const segLenSq = dx * dx + dy * dy;
+		const px = (lon - a.lon) * cosLat;
+		const py = lat - a.lat;
+		const t =
+			segLenSq === 0
+				? 0
+				: Math.max(0, Math.min(1, (px * dx + py * dy) / segLenSq));
+		const projLat = a.lat + t * (b.lat - a.lat);
+		const projLon = a.lon + t * (b.lon - a.lon);
+		const dist = haversineM(lat, lon, projLat, projLon);
+		if (dist < bestDist) {
+			bestDist = dist;
+			bestMi = a.mile + t * (b.mile - a.mile);
 		}
 	}
 
-	const rawMi = cumDists[nearestIdx] / MI;
-	const officialMi = calibrateToOfficialMi(rawMi);
-	const officialM = officialMi * MI;
+	const officialM = bestMi * MI;
 
 	if (direction === "NOBO") return officialM;
-	const totalOfficialM = CALIBRATION[CALIBRATION.length - 1][1] * MI;
+	const totalOfficialM = markers[markers.length - 1].mile * MI;
 	return totalOfficialM - officialM;
 }

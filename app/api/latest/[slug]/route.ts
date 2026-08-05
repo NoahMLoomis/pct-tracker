@@ -1,67 +1,46 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
+import { getFurthestPosition } from "@/lib/progress";
 import { createServiceClient } from "@/lib/supabase/server";
-import { snapToTrail } from "@/lib/pct-filter";
 import { withLogging } from "@/lib/with-logging";
 
-export const GET = withLogging(async (
-	_request: NextRequest,
-	{ params }: { params: Promise<{ slug: string }> },
-) => {
-	const { slug } = await params;
-	const supabase = createServiceClient();
+export const GET = withLogging(
+	async (
+		_request: NextRequest,
+		{ params }: { params: Promise<{ slug: string }> },
+	) => {
+		const { slug } = await params;
+		const supabase = createServiceClient();
 
-	const { data: user } = await supabase
-		.from("users")
-		.select("id, direction, strava_athlete_id")
-		.eq("slug", slug)
-		.single();
-
-	if (!user) {
-		return NextResponse.json({ error: "Not found" }, { status: 404 });
-	}
-
-	const direction = user.direction || "NOBO";
-
-	// Strava users: prefer latest_position (populated by activity sync)
-	if (user.strava_athlete_id != null) {
-		const { data: pos } = await supabase
-			.from("latest_position")
-			.select("lat, lon, activity_date")
-			.eq("user_id", user.id)
+		const { data: user } = await supabase
+			.from("users")
+			.select("id, direction, strava_athlete_id")
+			.eq("slug", slug)
 			.single();
 
-		if (pos) {
-			return NextResponse.json(
-				{ lat: pos.lat, lon: pos.lon, ts: pos.activity_date || "", direction },
-				{
-					headers: {
-						"Cache-Control": "s-maxage=300, stale-while-revalidate=60",
-					},
-				},
-			);
+		if (!user) {
+			return NextResponse.json({ error: "Not found" }, { status: 404 });
 		}
-		// Fall through to manual update location if no Strava position yet
-	}
 
-	// Use latest trail update that has a location (all users, or Strava users with no sync yet)
-	const { data: update } = await supabase
-		.from("trail_updates")
-		.select("lat, lon, created_at")
-		.eq("user_id", user.id)
-		.not("lat", "is", null)
-		.not("lon", "is", null)
-		.order("created_at", { ascending: false })
-		.limit(1)
-		.single();
+		const direction = user.direction || "NOBO";
 
-	if (!update) {
-		return NextResponse.json({ lat: 0, lon: 0, ts: "", direction });
-	}
+		// Furthest point reached from any source — Strava-synced activities or
+		// manual trail_update posts, whichever is further along the trail.
+		const furthest = await getFurthestPosition(supabase, user.id, direction);
 
-	const snapped = snapToTrail(update.lat as number, update.lon as number);
+		if (!furthest) {
+			return NextResponse.json({ lat: 0, lon: 0, ts: "", direction });
+		}
 
-	return NextResponse.json(
-		{ lat: snapped.lat, lon: snapped.lon, ts: update.created_at, direction },
-		{ headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" } },
-	);
-});
+		return NextResponse.json(
+			{
+				lat: furthest.lat,
+				lon: furthest.lon,
+				ts: furthest.ts || "",
+				direction,
+			},
+			{
+				headers: { "Cache-Control": "s-maxage=300, stale-while-revalidate=60" },
+			},
+		);
+	},
+);
