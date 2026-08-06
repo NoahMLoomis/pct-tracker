@@ -7,6 +7,7 @@ export async function syncUser(
 	userId: string,
 ): Promise<{ added: number; skipped: number }> {
 	const supabase = createServiceClient();
+	const startedAt = Date.now();
 
 	logger.info("sync start", { userId });
 
@@ -19,6 +20,7 @@ export async function syncUser(
 	if (syncStartErr) {
 		logger.error("sync_state upsert failed", {
 			userId,
+			stage: "syncing",
 			error: syncStartErr.message,
 		});
 	} else {
@@ -69,6 +71,9 @@ export async function syncUser(
 		logger.info("sync fetched activities", {
 			userId,
 			count: activities.length,
+			windowStart: after ? new Date(after * 1000).toISOString() : null,
+			windowEnd: before ? new Date(before * 1000).toISOString() : null,
+			fetchMs: Date.now() - startedAt,
 		});
 
 		const { data: existing } = await supabase
@@ -80,6 +85,8 @@ export async function syncUser(
 
 		let added = 0;
 		let skipped = 0;
+		let addedDistanceM = 0;
+		let addedElevationM = 0;
 
 		for (const act of activities) {
 			if (existingIds.has(act.id)) {
@@ -109,6 +116,8 @@ export async function syncUser(
 			);
 
 			added++;
+			addedDistanceM += act.distance || 0;
+			addedElevationM += act.total_elevation_gain || 0;
 		}
 
 		// Pick the activity that's furthest along the trail, not the most
@@ -160,17 +169,31 @@ export async function syncUser(
 		if (syncDoneErr) {
 			logger.error("sync_state upsert failed", {
 				userId,
+				stage: "idle",
 				error: syncDoneErr.message,
 			});
 		} else {
 			logger.info("sync_state upsert succeeded", { userId, status: "idle" });
 		}
 
-		logger.info("sync complete", { userId, added, skipped });
+		logger.info("sync complete", {
+			userId,
+			added,
+			skipped,
+			addedDistanceM: Math.round(addedDistanceM),
+			addedElevationM: Math.round(addedElevationM),
+			furthestActivityDate: furthest?.date ?? null,
+			durationMs: Date.now() - startedAt,
+		});
 		return { added, skipped };
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.message : String(err);
-		logger.error("sync failed", { userId, error: errorMessage });
+		logger.error("sync failed", {
+			userId,
+			error: errorMessage,
+			stack: err instanceof Error ? err.stack : undefined,
+			durationMs: Date.now() - startedAt,
+		});
 		const { error: syncErrUpsertErr } = await supabase
 			.from("sync_state")
 			.upsert({
@@ -180,8 +203,9 @@ export async function syncUser(
 				error_message: errorMessage,
 			});
 		if (syncErrUpsertErr) {
-			logger.error("sync_state error upsert failed", {
+			logger.error("sync_state upsert failed", {
 				userId,
+				stage: "error",
 				error: syncErrUpsertErr.message,
 			});
 		} else {

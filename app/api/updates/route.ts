@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { logger } from "@/lib/logger";
 import { getSession } from "@/lib/session";
 import { createServiceClient } from "@/lib/supabase/server";
-import { logger } from "@/lib/logger";
 import { withLogging } from "@/lib/with-logging";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -109,7 +109,9 @@ export const POST = withLogging(async (request: NextRequest) => {
 		await notifySubscribers(supabase, userId, data).catch((err) =>
 			logger.error("notify subscribers failed", {
 				userId,
+				trailUpdateId: data.id,
 				error: err instanceof Error ? err.message : String(err),
+				stack: err instanceof Error ? err.stack : undefined,
 			}),
 		);
 
@@ -163,7 +165,8 @@ export const POST = withLogging(async (request: NextRequest) => {
 		// Delete old photo from storage if it was replaced or removed
 		if (existing?.photo_url && existing.photo_url !== body.photo_url) {
 			const oldPath = storagePathFromUrl(existing.photo_url);
-			if (oldPath) await supabase.storage.from("update-photos").remove([oldPath]);
+			if (oldPath)
+				await supabase.storage.from("update-photos").remove([oldPath]);
 		}
 
 		return NextResponse.json({ ok: true });

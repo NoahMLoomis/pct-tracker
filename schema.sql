@@ -97,10 +97,11 @@ CREATE TABLE public.subscriptions (
   CONSTRAINT subscriptions_pkey PRIMARY KEY (id),
   CONSTRAINT subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
-CREATE TABLE public.error_logs (
+CREATE TABLE public.logs (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   ts timestamp with time zone NOT NULL DEFAULT now(),
+  level text NOT NULL,
   msg text NOT NULL,
   fields jsonb,
-  CONSTRAINT error_logs_pkey PRIMARY KEY (id)
+  CONSTRAINT logs_pkey PRIMARY KEY (id)
 );

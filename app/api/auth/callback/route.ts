@@ -165,7 +165,12 @@ export const GET = withLogging(async (request: NextRequest) => {
 			.single();
 
 		if (error || !newUser) {
-			logger.error("strava user creation failed", { error: error?.message });
+			logger.error("strava user creation failed", {
+				stravaAthleteId: athlete.id,
+				displayName,
+				slug,
+				error: error?.message,
+			});
 			return NextResponse.json(
 				{ error: "Failed to create user" },
 				{ status: 500 },

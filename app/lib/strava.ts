@@ -35,7 +35,9 @@ export async function refreshAccessToken(userId: string): Promise<string> {
 	});
 
 	if (!res.ok) {
-		throw new Error(`Strava token refresh failed: ${res.status}`);
+		throw new Error(
+			`Strava token refresh failed: ${res.status}, ${await res.text()}`,
+		);
 	}
 
 	const tok = await res.json();
@@ -80,7 +82,9 @@ export async function fetchActivities(
 			{ headers: { Authorization: `Bearer ${accessToken}` } },
 		);
 		if (!res.ok)
-			throw new Error(`Strava activities fetch failed: ${res.status}`);
+			throw new Error(
+				`Strava activities fetch failed: ${res.status}, ${await res.text()}`,
+			);
 		const batch: StravaActivity[] = await res.json();
 		if (!batch.length) break;
 		all.push(...batch);
