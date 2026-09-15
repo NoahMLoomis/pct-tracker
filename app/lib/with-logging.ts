@@ -3,7 +3,10 @@ import { logger } from "./logger";
 import { getSession } from "./session";
 
 export function withLogging<Args extends unknown[]>(
-	handler: (req: NextRequest, ...args: Args) => Promise<NextResponse | Response>,
+	handler: (
+		req: NextRequest,
+		...args: Args
+	) => Promise<NextResponse | Response>,
 ): (req: NextRequest, ...args: Args) => Promise<NextResponse | Response> {
 	return async (req, ...args) => {
 		const start = Date.now();
@@ -35,7 +38,10 @@ export function withLogging<Args extends unknown[]>(
 				error: err instanceof Error ? err.message : String(err),
 				stack: err instanceof Error ? err.stack : undefined,
 			});
-			return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+			return NextResponse.json(
+				{ error: "Internal server error" },
+				{ status: 500 },
+			);
 		}
 	};
 }

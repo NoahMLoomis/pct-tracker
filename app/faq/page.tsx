@@ -18,13 +18,12 @@ const faqs: { question: string; answer: ReactNode }[] = [
 	},
 	{
 		question: "Can I attach a photo to a trail update?",
-		answer:
-			"Yes, you can upload one image per update",
+		answer: "Yes, you can upload one image per update",
 	},
 	{
 		question: "Can followers get notified of new updates?",
 		answer:
-			"Yes. Anyone viewing your public tracker can enter their email on the \"Updates\" page to subscribe. They'll receive an email whenever you post a new trail update." 
+			'Yes. Anyone viewing your public tracker can enter their email on the "Updates" page to subscribe. They\'ll receive an email whenever you post a new trail update.',
 	},
 	{
 		question:

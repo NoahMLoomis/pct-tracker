@@ -15,7 +15,10 @@ export const POST = withLogging(async (request: NextRequest) => {
 		return NextResponse.json({ error: "No file provided" }, { status: 400 });
 	}
 	if (!file.type.startsWith("image/")) {
-		return NextResponse.json({ error: "File must be an image" }, { status: 400 });
+		return NextResponse.json(
+			{ error: "File must be an image" },
+			{ status: 400 },
+		);
 	}
 
 	const ext = file.type === "image/png" ? "png" : "jpg";
@@ -34,9 +37,9 @@ export const POST = withLogging(async (request: NextRequest) => {
 		return NextResponse.json({ error: error.message }, { status: 500 });
 	}
 
-	const { data: { publicUrl } } = supabase.storage
-		.from("update-photos")
-		.getPublicUrl(path);
+	const {
+		data: { publicUrl },
+	} = supabase.storage.from("update-photos").getPublicUrl(path);
 
 	return NextResponse.json({ url: publicUrl });
 });
