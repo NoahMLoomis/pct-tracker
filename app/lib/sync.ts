@@ -67,7 +67,7 @@ export async function syncUser(
 
 		const accessToken = await refreshAccessToken(userId);
 		const activities = await fetchActivities(accessToken, after, before);
-		activities.sort((a, b) => a.start_date.localeCompare(b.start_date));
+
 		logger.info("sync fetched activities", {
 			userId,
 			count: activities.length,
@@ -110,7 +110,7 @@ export async function syncUser(
 					distance_m: act.distance || 0,
 					moving_time_s: act.moving_time || 0,
 					elevation_gain_m: act.total_elevation_gain || 0,
-					activity_type: act.type,
+					activity_type: act.sport_type,
 				},
 				{ onConflict: "user_id,strava_id" },
 			);

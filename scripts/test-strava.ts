@@ -10,6 +10,7 @@
  * Tests: token refresh → /athlete profile → /athlete/activities (first page)
  */
 
+import { StravaActivity } from "@/lib/strava";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
@@ -54,7 +55,7 @@ interface AthleteArg {
 function parseArg(arg: string): AthleteArg {
   const colonIdx = arg.indexOf(":");
   if (colonIdx === -1) {
-    return { label: arg.slice(0, 8) + "…", refreshToken: arg };
+    return { label: `${arg.slice(0, 8)}…`, refreshToken: arg };
   }
   return { label: arg.slice(0, colonIdx), refreshToken: arg.slice(colonIdx + 1) };
 }
@@ -88,13 +89,13 @@ async function getProfile(accessToken: string): Promise<{ id: number; firstname:
   return res.json();
 }
 
-async function getRecentActivities(accessToken: string): Promise<number> {
+async function getRecentActivities(accessToken: string): Promise<StravaActivity[]> {
   const res = await fetch(`${API_BASE}/athlete/activities?per_page=5&page=1`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) throw new Error(`/athlete/activities failed (${res.status})`);
   const activities = await res.json();
-  return activities.length;
+  return activities;
 }
 
 async function testAthlete({ label, refreshToken: rt }: AthleteArg) {
@@ -118,8 +119,8 @@ async function testAthlete({ label, refreshToken: rt }: AthleteArg) {
   }
 
   try {
-    const count = await getRecentActivities(accessToken);
-    console.log(`  ✓ Activities: ${count} returned in first page`);
+    const activities = await getRecentActivities(accessToken);
+    console.log(`  ✓ Activities: ${activities.length} returned in first page`);
   } catch (err) {
     console.error(`  ✗ Activities: ${(err as Error).message}`);
   }

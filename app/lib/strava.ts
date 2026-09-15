@@ -61,7 +61,7 @@ export interface StravaActivity {
 	start_date: string;
 	distance: number;
 	moving_time: number;
-	type: string;
+	sport_type: string;
 	total_elevation_gain: number;
 	start_latlng: [number, number] | null;
 	end_latlng: [number, number] | null;
@@ -86,8 +86,18 @@ export async function fetchActivities(
 				`Strava activities fetch failed: ${res.status}, ${await res.text()}`,
 			);
 		const batch: StravaActivity[] = await res.json();
+
 		if (!batch.length) break;
-		all.push(...batch);
+
+		all.push(
+			...batch.filter(
+				(a) =>
+					a.sport_type.toLowerCase() === "hike" ||
+					a.sport_type.toLowerCase() === "run" ||
+					a.sport_type.toLowerCase() === "trailrun" ||
+					a.sport_type.toLowerCase() === "walk",
+			),
+		);
 	}
-	return all;
+	return all.sort((a, b) => a.start_date.localeCompare(b.start_date));
 }
